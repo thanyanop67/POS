@@ -20,18 +20,8 @@ function App() {
   const [route, setRoute] = useState('dashboard');
   const [routeArg, setRouteArg] = useState(null);
 
-  // ---- Auth ----
-  const [session, setSession] = useState(null);
-  const [authReady, setAuthReady] = useState(false);
-  useEffect(() => {
-    if (!window.sb) { setAuthReady(true); return; }
-    window.sb.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setAuthReady(true);
-    });
-    const { data: sub } = window.sb.auth.onAuthStateChange((_e, sess) => setSession(sess));
-    return () => sub.subscription.unsubscribe();
-  }, []);
+  // ---- Local auth gate ----
+  const [authed, setAuthed] = useState(() => window.isLocallyAuthed?.() || false);
 
   // ---- Data ----
   const [products, setProducts] = useState(() => SEED_PRODUCTS.map((p) => ({ ...p })));
@@ -41,9 +31,9 @@ function App() {
   const [receipt, setReceipt] = useState(null);
   const [dbReady, setDbReady] = useState(!window.sb);
 
-  // Load from Supabase once authenticated (or immediately if no Supabase configured)
+  // Load from Supabase once authed (or immediately if no Supabase configured)
   useEffect(() => {
-    if (!window.sb || !session) return;
+    if (!window.sb || !authed) return;
     let cancelled = false;
     (async () => {
       try {
@@ -59,11 +49,11 @@ function App() {
       }
     })();
     return () => { cancelled = true; };
-  }, [session]);
+  }, [authed]);
 
   // Realtime sync — listen for changes from other clients
   useEffect(() => {
-    if (!window.sb || !session) return;
+    if (!window.sb || !authed) return;
     const ch = window.sb.channel('pos-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
         if (payload.eventType === 'DELETE') {
@@ -103,7 +93,7 @@ function App() {
       })
       .subscribe();
     return () => { window.sb.removeChannel(ch); };
-  }, [session]);
+  }, [authed]);
 
   const [toasts, setToasts] = useState([]);
   const pushToast = useCallback((toast) => {
@@ -181,16 +171,9 @@ function App() {
   // Today's date string
   const todayStr = new Date().toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
 
-  // Auth gate: show login screen if Supabase configured but user not signed in
-  if (!authReady) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--ink-3)' }}>
-        กำลังโหลด...
-      </div>
-    );
-  }
-  if (window.sb && !session) {
-    return <LoginScreen onSession={setSession}/>;
+  // Local auth gate
+  if (!authed) {
+    return <LoginScreen onAuth={() => setAuthed(true)}/>;
   }
 
   const titles = {
@@ -368,18 +351,17 @@ function App() {
               pushToast({ kind: 'ok', text: 'รีเซ็ตข้อมูลเดโม่แล้ว' });
             }}/>
         </TweakSection>
-        {window.sb && session && (
-          <TweakSection label="บัญชี">
-            <div style={{ fontSize: 12, color: 'var(--ink-3)', marginBottom: 8 }}>
-              {session.user?.email}
-            </div>
-            <TweakButton label="ออกจากระบบ"
-              onClick={async () => {
-                await window.sb.auth.signOut();
-                pushToast({ kind: 'ok', text: 'ออกจากระบบแล้ว' });
-              }}/>
-          </TweakSection>
-        )}
+        <TweakSection label="บัญชี">
+          <div style={{ fontSize: 12, color: 'var(--ink-3)', marginBottom: 8 }}>
+            admintawan
+          </div>
+          <TweakButton label="ออกจากระบบ"
+            onClick={() => {
+              window.localLogout?.();
+              setAuthed(false);
+              pushToast({ kind: 'ok', text: 'ออกจากระบบแล้ว' });
+            }}/>
+        </TweakSection>
       </TweaksPanel>
     </div>
   );

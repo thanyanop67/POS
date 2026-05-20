@@ -1,38 +1,45 @@
-// auth.jsx — Login gate for ร้านนายตะวัน
-// Email + password auth via Supabase. Shows a centered card before
-// the rest of the app loads; once authenticated, App renders normally.
+// auth.jsx — Local login gate (no Supabase Auth)
+// Hardcoded admin credentials. Session is persisted in localStorage.
 
-function LoginScreen({ onSession }) {
-  const [email, setEmail] = React.useState('');
+const LOCAL_AUTH_KEY = 'nai-tawan-auth';
+const LOCAL_AUTH = {
+  username: 'admintawan',
+  password: '11325046',
+};
+
+window.isLocallyAuthed = () => {
+  try { return localStorage.getItem(LOCAL_AUTH_KEY) === '1'; } catch { return false; }
+};
+window.localLogout = () => {
+  try { localStorage.removeItem(LOCAL_AUTH_KEY); } catch {}
+};
+
+function LoginScreen({ onAuth }) {
+  const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [mode, setMode] = React.useState('signin'); // 'signin' | 'signup'
   const [busy, setBusy] = React.useState(false);
   const [err, setErr] = React.useState('');
-  const [info, setInfo] = React.useState('');
 
-  const submit = async (e) => {
+  const submit = (e) => {
     e.preventDefault();
-    setErr(''); setInfo(''); setBusy(true);
-    try {
-      if (mode === 'signin') {
-        const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        onSession?.(data.session);
+    setErr(''); setBusy(true);
+    setTimeout(() => {
+      if (username.trim() === LOCAL_AUTH.username && password === LOCAL_AUTH.password) {
+        try { localStorage.setItem(LOCAL_AUTH_KEY, '1'); } catch {}
+        onAuth?.();
       } else {
-        const { data, error } = await window.sb.auth.signUp({ email, password });
-        if (error) throw error;
-        if (data.session) {
-          onSession?.(data.session);
-        } else {
-          setInfo('สร้างบัญชีสำเร็จ — กรุณาตรวจสอบอีเมลเพื่อยืนยัน');
-        }
+        setErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
       }
-    } catch (e2) {
-      setErr(e2.message || String(e2));
-    } finally {
       setBusy(false);
-    }
+    }, 200);
   };
+
+  const inputStyle = {
+    width: '100%', padding: '10px 12px', borderRadius: 8,
+    border: '1px solid #D1D5DB', fontSize: 14, marginBottom: 12,
+    fontFamily: 'inherit',
+  };
+  const labelStyle = { display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 };
 
   return (
     <div style={{
@@ -59,39 +66,21 @@ function LoginScreen({ onSession }) {
         </div>
 
         <form onSubmit={submit}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>อีเมล</label>
-          <input
-            type="email" required autoFocus
-            value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            style={{
-              width: '100%', padding: '10px 12px', borderRadius: 8,
-              border: '1px solid #D1D5DB', fontSize: 14, marginBottom: 12,
-              fontFamily: 'inherit',
-            }}/>
+          <label style={labelStyle}>ชื่อผู้ใช้</label>
+          <input type="text" required autoFocus autoComplete="username"
+            value={username} onChange={(e) => setUsername(e.target.value)}
+            style={inputStyle}/>
 
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6 }}>รหัสผ่าน</label>
-          <input
-            type="password" required minLength={6}
+          <label style={labelStyle}>รหัสผ่าน</label>
+          <input type="password" required autoComplete="current-password"
             value={password} onChange={(e) => setPassword(e.target.value)}
-            placeholder="อย่างน้อย 6 ตัวอักษร"
-            style={{
-              width: '100%', padding: '10px 12px', borderRadius: 8,
-              border: '1px solid #D1D5DB', fontSize: 14, marginBottom: 16,
-              fontFamily: 'inherit',
-            }}/>
+            style={{ ...inputStyle, marginBottom: 16 }}/>
 
           {err && (
             <div style={{
               background: '#FEF2F2', color: '#B91C1C', padding: '8px 12px',
               borderRadius: 8, fontSize: 13, marginBottom: 12,
             }}>{err}</div>
-          )}
-          {info && (
-            <div style={{
-              background: '#ECFDF5', color: '#065F46', padding: '8px 12px',
-              borderRadius: 8, fontSize: 13, marginBottom: 12,
-            }}>{info}</div>
           )}
 
           <button type="submit" disabled={busy} style={{
@@ -102,18 +91,9 @@ function LoginScreen({ onSession }) {
             opacity: busy ? .6 : 1,
             fontFamily: 'inherit',
           }}>
-            {busy ? 'กำลังโหลด...' : (mode === 'signin' ? 'เข้าสู่ระบบ' : 'สร้างบัญชี')}
+            {busy ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
           </button>
         </form>
-
-        <button onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setErr(''); setInfo(''); }}
-          style={{
-            marginTop: 14, background: 'none', border: 'none',
-            color: 'var(--brand, #1E55B8)', fontSize: 13, cursor: 'pointer',
-            display: 'block', width: '100%', fontFamily: 'inherit',
-          }}>
-          {mode === 'signin' ? 'ยังไม่มีบัญชี? สร้างบัญชีใหม่' : 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ'}
-        </button>
       </div>
     </div>
   );
