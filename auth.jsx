@@ -1,37 +1,24 @@
-// auth.jsx — Local login gate (no Supabase Auth)
-// Hardcoded admin credentials. Session is persisted in localStorage.
+// auth.jsx — Supabase Auth login (sign-in only)
+// New users must be created via Supabase Dashboard → Authentication → Users.
 
-const LOCAL_AUTH_KEY = 'nai-tawan-auth';
-const LOCAL_AUTH = {
-  username: 'admintawan',
-  password: '11325046',
-};
-
-window.isLocallyAuthed = () => {
-  try { return localStorage.getItem(LOCAL_AUTH_KEY) === '1'; } catch { return false; }
-};
-window.localLogout = () => {
-  try { localStorage.removeItem(LOCAL_AUTH_KEY); } catch {}
-};
-
-function LoginScreen({ onAuth }) {
-  const [username, setUsername] = React.useState('');
+function LoginScreen({ onSession }) {
+  const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const [err, setErr] = React.useState('');
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setErr(''); setBusy(true);
-    setTimeout(() => {
-      if (username.trim() === LOCAL_AUTH.username && password === LOCAL_AUTH.password) {
-        try { localStorage.setItem(LOCAL_AUTH_KEY, '1'); } catch {}
-        onAuth?.();
-      } else {
-        setErr('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-      }
+    try {
+      const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      onSession?.(data.session);
+    } catch (e2) {
+      setErr(e2.message || String(e2));
+    } finally {
       setBusy(false);
-    }, 200);
+    }
   };
 
   const inputStyle = {
@@ -66,9 +53,10 @@ function LoginScreen({ onAuth }) {
         </div>
 
         <form onSubmit={submit}>
-          <label style={labelStyle}>ชื่อผู้ใช้</label>
-          <input type="text" required autoFocus autoComplete="username"
-            value={username} onChange={(e) => setUsername(e.target.value)}
+          <label style={labelStyle}>อีเมล</label>
+          <input type="email" required autoFocus autoComplete="username"
+            value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
             style={inputStyle}/>
 
           <label style={labelStyle}>รหัสผ่าน</label>
@@ -94,6 +82,13 @@ function LoginScreen({ onAuth }) {
             {busy ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
           </button>
         </form>
+
+        <div style={{
+          marginTop: 14, fontSize: 12, color: 'var(--ink-3, #6B7280)',
+          textAlign: 'center',
+        }}>
+          ยังไม่มีบัญชี? ติดต่อเจ้าของร้านเพื่อขอสิทธิ์
+        </div>
       </div>
     </div>
   );
