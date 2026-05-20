@@ -418,17 +418,104 @@ function FakeQR({ size = 160 }) {
   );
 }
 
-// === Webcam scanner (simulated) ===
+// === Webcam barcode scanner (uses native BarcodeDetector when available) ===
 function WebcamScanner({ onCode }) {
+  const videoRef = React.useRef(null);
+  const [streaming, setStreaming] = React.useState(false);
+  const [err, setErr] = React.useState('');
   const [manual, setManual] = React.useState('');
+
+  React.useEffect(() => {
+    let stream = null;
+    let detector = null;
+    let timer = null;
+    let cancelled = false;
+
+    (async () => {
+      if (!('BarcodeDetector' in window)) {
+        setErr('เบราว์เซอร์นี้ไม่รองรับการสแกนกล้อง — ใช้ Chrome/Edge บน Android');
+        return;
+      }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setErr('เบราว์เซอร์ไม่รองรับกล้อง — ต้องเปิดผ่าน HTTPS');
+        return;
+      }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+          audio: false,
+        });
+      } catch (e) {
+        if (e.name === 'NotAllowedError') setErr('กรุณาอนุญาตการใช้กล้องในเบราว์เซอร์');
+        else if (e.name === 'NotFoundError') setErr('ไม่พบกล้องบนอุปกรณ์นี้');
+        else setErr('เปิดกล้องไม่ได้: ' + (e.message || e.name));
+        return;
+      }
+      if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = stream;
+        try { await video.play(); } catch (e) { /* ignore autoplay block */ }
+      }
+      setStreaming(true);
+
+      try {
+        detector = new window.BarcodeDetector({
+          formats: ['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf'],
+        });
+      } catch (e) {
+        detector = new window.BarcodeDetector();
+      }
+
+      let lastCode = null;
+      let lastTime = 0;
+      const tick = async () => {
+        if (cancelled || !videoRef.current) return;
+        try {
+          const codes = await detector.detect(videoRef.current);
+          if (codes.length > 0) {
+            const code = codes[0].rawValue;
+            const now = Date.now();
+            if (code !== lastCode || (now - lastTime) > 2000) {
+              lastCode = code;
+              lastTime = now;
+              onCode(code);
+              if (navigator.vibrate) navigator.vibrate(50);
+            }
+          }
+        } catch (e) { /* detection error, keep going */ }
+        timer = setTimeout(tick, 200);
+      };
+      tick();
+    })();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      if (stream) stream.getTracks().forEach((t) => t.stop());
+    };
+  }, [onCode]);
+
   return (
     <div>
-      <div className="webcam-sim">
-        <div className="grid"></div>
+      <div className="webcam-sim" style={{ height: 280 }}>
+        {streaming && (
+          <video ref={videoRef} autoPlay playsInline muted
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'cover',
+            }}/>
+        )}
+        {!streaming && <div className="grid"></div>}
         <div className="reticle">
           <div className="laser"></div>
         </div>
-        <div className="hint">โหมดกล้อง · จัดบาร์โค้ดให้อยู่ในกรอบ</div>
+        <div className="hint">
+          {err
+            ? `⚠️ ${err}`
+            : streaming ? 'จัดบาร์โค้ดให้อยู่ในกรอบ' : 'กำลังเปิดกล้อง...'}
+        </div>
       </div>
       <form className="scan-field" onSubmit={(e) => { e.preventDefault(); if (manual) { onCode(manual.trim()); setManual(''); }}}>
         <span className="scan-ico"><ICO.qrCam size={28}/></span>

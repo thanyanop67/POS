@@ -61,6 +61,50 @@ function App() {
     return () => { cancelled = true; };
   }, [session]);
 
+  // Realtime sync — listen for changes from other clients
+  useEffect(() => {
+    if (!window.sb || !session) return;
+    const ch = window.sb.channel('pos-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
+        if (payload.eventType === 'DELETE') {
+          setProducts((prev) => prev.filter((p) => p.id !== payload.old.id));
+        } else {
+          const p = rowToProduct(payload.new);
+          setProducts((prev) => {
+            const idx = prev.findIndex((x) => x.id === p.id);
+            if (idx === -1) return [...prev, p];
+            const next = prev.slice();
+            next[idx] = p;
+            return next;
+          });
+        }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bills' }, (payload) => {
+        const b = {
+          id: payload.new.id,
+          when: new Date(payload.new.occurred_at).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+          items: payload.new.items_count,
+          total: Number(payload.new.total),
+          profit: Number(payload.new.profit),
+          method: payload.new.payment_method,
+        };
+        setBills((prev) => prev.some((x) => x.id === b.id) ? prev : [b, ...prev]);
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'restocks' }, (payload) => {
+        const r = {
+          id: payload.new.id,
+          when: new Date(payload.new.occurred_at).toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+          productId: payload.new.product_id,
+          qty: Number(payload.new.qty),
+          unitCost: Number(payload.new.unit_cost),
+          by: payload.new.by_name,
+        };
+        setRestocks((prev) => prev.some((x) => x.id === r.id) ? prev : [r, ...prev]);
+      })
+      .subscribe();
+    return () => { window.sb.removeChannel(ch); };
+  }, [session]);
+
   const [toasts, setToasts] = useState([]);
   const pushToast = useCallback((toast) => {
     const id = Math.random().toString(36).slice(2);
