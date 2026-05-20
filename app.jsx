@@ -178,6 +178,73 @@ function App() {
   const lowCount = products.filter((p) => p.stock <= p.lowStockAt).length;
   const newBillsCount = bills.filter((b) => b.isNew).length;
 
+  // Derive a friendly display name from the logged-in email
+  const userName = (() => {
+    const raw = session?.user?.email || '';
+    const local = raw.split('@')[0] || '';
+    if (!local) return STORE.ownerName || 'ผู้ใช้';
+    // Replace separators with spaces, capitalize each word
+    return local.split(/[._-]+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  })();
+
+  // Shop open/closed state (per-device)
+  const [shopOpen, setShopOpen] = useState(() => {
+    try { return localStorage.getItem('shop-open') !== '0'; } catch { return true; }
+  });
+  const setShopOpenPersisted = (v) => {
+    setShopOpen(v);
+    try { localStorage.setItem('shop-open', v ? '1' : '0'); } catch {}
+  };
+  const [closingModal, setClosingModal] = useState(null); // { sales, profit, count, top }
+
+  const openCloseShop = async () => {
+    if (!shopOpen) {
+      setShopOpenPersisted(true);
+      pushToast({ kind: 'ok', text: 'เปิดร้านแล้ว' });
+      return;
+    }
+    // Closing → compute today's summary
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    let billsToday = [];
+    let itemRows = [];
+    if (window.sb) {
+      try {
+        const r = await window.sb.from('bills')
+          .select('id, total, profit')
+          .gte('occurred_at', today.toISOString());
+        if (!r.error) billsToday = r.data || [];
+        const ids = billsToday.map((b) => b.id);
+        if (ids.length) {
+          const i = await window.sb.from('bill_items')
+            .select('product_id, qty')
+            .in('bill_id', ids);
+          if (!i.error) itemRows = i.data || [];
+        }
+      } catch (e) { /* fall through */ }
+    }
+    const totals = billsToday.reduce(
+      (a, b) => ({ sales: a.sales + Number(b.total), profit: a.profit + Number(b.profit) }),
+      { sales: 0, profit: 0 },
+    );
+    // Top products today
+    const counts = {};
+    for (const row of itemRows) {
+      counts[row.product_id] = (counts[row.product_id] || 0) + Number(row.qty);
+    }
+    const top = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1]).slice(0, 3)
+      .map(([id, qty]) => ({
+        name: products.find((p) => p.id === id)?.name || id,
+        qty,
+      }));
+    setClosingModal({
+      sales: totals.sales,
+      profit: totals.profit,
+      count: billsToday.length,
+      top,
+    });
+  };
+
   // Today's date string
   const todayStr = new Date().toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -269,6 +336,21 @@ function App() {
             <div style={{ color: 'var(--ink-3)', fontSize: 13, marginTop: 2 }}>{titles[route].sub}</div>
           </div>
           <div className="topbar-actions">
+            <button
+              type="button"
+              className="pill"
+              onClick={openCloseShop}
+              style={{
+                cursor: 'pointer',
+                border: 'none',
+                background: shopOpen ? 'var(--ok-soft, #DCEFE3)' : '#F1F3F5',
+                color: shopOpen ? 'var(--ok, #13754A)' : 'var(--ink-3, #6B7280)',
+                fontFamily: 'inherit',
+              }}
+              title={shopOpen ? 'กดเพื่อปิดร้าน' : 'กดเพื่อเปิดร้าน'}>
+              <span className="dot" style={{ background: shopOpen ? 'var(--ok, #13754A)' : '#9CA3AF' }}></span>
+              {shopOpen ? 'ร้านเปิด' : 'ร้านปิด'}
+            </button>
             <span className="pill"><span className="dot"></span>เชื่อมต่ออยู่</span>
             <span className="pill">
               <ICO.history size={14}/>
@@ -298,7 +380,8 @@ function App() {
           <RestockScreen products={products} setProducts={setProducts}
             restocks={restocks} setRestocks={setRestocks}
             pushRestock={pushRestock}
-            pushToast={pushToast} initialBarcode={routeArg}/>
+            pushToast={pushToast} initialBarcode={routeArg}
+            userName={userName}/>
         )}
         {route === 'dashboard' && (
           <DashboardScreen products={products} bills={bills}
@@ -314,6 +397,18 @@ function App() {
       </div>
 
       {receipt && <ReceiptModal bill={receipt} onClose={() => setReceipt(null)}/>}
+
+      {closingModal && (
+        <CloseShopModal
+          summary={closingModal}
+          lowCount={lowCount}
+          onCancel={() => setClosingModal(null)}
+          onConfirm={() => {
+            setShopOpenPersisted(false);
+            setClosingModal(null);
+            pushToast({ kind: 'ok', text: 'ปิดร้านแล้ว' });
+          }}/>
+      )}
 
       <div className="toast-wrap">
         {toasts.map((t) => (
@@ -402,6 +497,79 @@ function NavItem({ icon, label, active, onClick, badge }) {
         }}>{badge}</span>
       )}
     </button>
+  );
+}
+
+function CloseShopModal({ summary, lowCount, onCancel, onConfirm }) {
+  const { sales, profit, count, top } = summary;
+  return (
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-h">
+          <h2>สรุปก่อนปิดร้าน</h2>
+          <button className="btn btn-ghost btn-icon" onClick={onCancel} title="ปิด">
+            <ICO.x size={18}/>
+          </button>
+        </div>
+        <div className="modal-body">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 18 }}>
+            <SummaryStat label="ยอดขายวันนี้" value={`฿${fmtTHB(sales)}`} accent="var(--brand)"/>
+            <SummaryStat label="กำไรวันนี้" value={`฿${fmtTHB(profit)}`} accent="var(--ok, #13754A)"/>
+            <SummaryStat label="จำนวนบิล" value={fmtInt(count)} accent="var(--ink)"/>
+          </div>
+
+          {top.length > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>สินค้าขายดีวันนี้</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {top.map((t, i) => (
+                  <div key={i} style={{
+                    display: 'flex', justifyContent: 'space-between',
+                    padding: '8px 12px', background: 'var(--bg, #F2F4F8)', borderRadius: 8, fontSize: 14,
+                  }}>
+                    <span><strong style={{ marginRight: 6 }}>{i + 1}.</strong>{t.name}</span>
+                    <span style={{ color: 'var(--ink-3)' }}>{fmtInt(t.qty)} ชิ้น</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {lowCount > 0 && (
+            <div style={{
+              padding: '10px 14px',
+              background: '#FEF3C7',
+              color: '#92400E',
+              borderRadius: 8,
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}>
+              <ICO.alert size={16}/>
+              <span>มีสินค้าสต๊อกต่ำ {lowCount} รายการ — อย่าลืมเติมพรุ่งนี้</span>
+            </div>
+          )}
+        </div>
+        <div className="modal-foot">
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>ยกเลิก</button>
+          <button type="button" className="btn btn-primary" onClick={onConfirm}>ยืนยันปิดร้าน</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SummaryStat({ label, value, accent }) {
+  return (
+    <div style={{
+      background: 'var(--bg, #F2F4F8)',
+      borderRadius: 10,
+      padding: 12,
+    }}>
+      <div style={{ fontSize: 11, color: 'var(--ink-3, #6B7280)', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: accent }}>{value}</div>
+    </div>
   );
 }
 

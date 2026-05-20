@@ -3,7 +3,8 @@
 // Mobile mockup: iPhone frame with camera viewfinder + same form
 // Both write into the shared products list (updates stock + last-cost)
 
-function RestockScreen({ products, setProducts, restocks, setRestocks, pushRestock, pushToast, initialBarcode }) {
+function RestockScreen({ products, setProducts, restocks, setRestocks, pushRestock, pushToast, initialBarcode, userName }) {
+  const stocker = userName || 'ผู้ใช้';
   const [code, setCode] = React.useState(initialBarcode || '');
   const [found, setFound] = React.useState(initialBarcode ? products.find((p) => p.barcode === initialBarcode) : null);
   const [qty, setQty] = React.useState('');
@@ -56,7 +57,7 @@ function RestockScreen({ products, setProducts, restocks, setRestocks, pushResto
       productId: found.id,
       qty: qtyN,
       unitCost: costN,
-      by: 'คุณวรรณา',
+      by: stocker,
     };
     if (pushRestock) pushRestock(newRec, found.id, qtyN, costN);
     else setRestocks((prev) => [newRec, ...prev]);
@@ -80,7 +81,7 @@ function RestockScreen({ products, setProducts, restocks, setRestocks, pushResto
               <div className="panel-sub">สแกน QR/บาร์โค้ดเพื่อค้นหาสินค้า แล้วระบุจำนวนและราคาทุนใหม่</div>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <span className="badge info"><ICO.user size={12}/> คุณวรรณา · ผู้ดูแล</span>
+              <span className="badge info"><ICO.user size={12}/> {stocker} · ผู้ดูแล</span>
             </div>
           </div>
 
@@ -226,7 +227,7 @@ function RestockScreen({ products, setProducts, restocks, setRestocks, pushResto
               const rec = {
                 id: 'r' + Date.now().toString(36),
                 when: new Date().toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
-                productId: p.id, qty: q, unitCost: c, by: 'คุณวรรณา (มือถือ)',
+                productId: p.id, qty: q, unitCost: c, by: stocker + ' (มือถือ)',
               };
               if (pushRestock) pushRestock(rec, p.id, q, c);
               else setRestocks((prev) => [rec, ...prev]);
