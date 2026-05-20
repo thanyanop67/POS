@@ -114,7 +114,7 @@ function POSScreen({
       total: grand,
       profit,
       method: payment.method,
-      lines: cartDetails.map((l) => ({ id: l.id, name: l.name, qty: l.qty, price: l.price, line: l.line, unit: l.unit })),
+      lines: cartDetails.map((l) => ({ id: l.id, name: l.name, qty: l.qty, price: l.price, line: l.line, unit: l.unit, cost: l.cost })),
       received: payment.received,
       change: payment.change,
     };

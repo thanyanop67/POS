@@ -20,11 +20,46 @@ function App() {
   const [route, setRoute] = useState('dashboard');
   const [routeArg, setRouteArg] = useState(null);
 
+  // ---- Auth ----
+  const [session, setSession] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  useEffect(() => {
+    if (!window.sb) { setAuthReady(true); return; }
+    window.sb.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthReady(true);
+    });
+    const { data: sub } = window.sb.auth.onAuthStateChange((_e, sess) => setSession(sess));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  // ---- Data ----
   const [products, setProducts] = useState(() => SEED_PRODUCTS.map((p) => ({ ...p })));
   const [restocks, setRestocks] = useState(() => SEED_RESTOCKS.map((r) => ({ ...r })));
   const [bills, setBills] = useState(() => SEED_BILLS.map((b) => ({ ...b })));
   const [cart, setCart] = useState([]);
   const [receipt, setReceipt] = useState(null);
+  const [dbReady, setDbReady] = useState(!window.sb);
+
+  // Load from Supabase once authenticated (or immediately if no Supabase configured)
+  useEffect(() => {
+    if (!window.sb || !session) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const all = await DB.fetchAll();
+        if (cancelled || !all) return;
+        if (all.products.length) setProducts(all.products);
+        if (all.bills.length)    setBills(all.bills);
+        if (all.restocks.length) setRestocks(all.restocks);
+      } catch (e) {
+        console.error('Load from DB failed; using seeds.', e);
+      } finally {
+        if (!cancelled) setDbReady(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [session]);
 
   const [toasts, setToasts] = useState([]);
   const pushToast = useCallback((toast) => {
@@ -33,9 +68,53 @@ function App() {
     setTimeout(() => setToasts((arr) => arr.filter((x) => x.id !== id)), 2600);
   }, []);
 
+  // Persist a completed bill + decrement stock in DB
   const pushBill = useCallback((bill) => {
     setBills((prev) => [{ ...bill, isNew: true }, ...prev]);
-  }, []);
+    if (!window.sb) return;
+    (async () => {
+      try {
+        const lines = (bill.lines || []).map((l) => ({
+          productId: l.id,
+          qty: l.qty,
+          unitPrice: l.price,
+          unitCost: l.cost ?? 0,
+          lineTotal: l.line,
+        }));
+        await DB.createBill(bill, lines);
+        // Decrement stocks in DB (sequential, best-effort)
+        for (const l of bill.lines || []) {
+          const cur = await window.sb.from('products').select('stock').eq('id', l.id).single();
+          if (cur.data) {
+            await DB.updateProductStock(l.id, Number(cur.data.stock) - l.qty);
+          }
+        }
+      } catch (e) {
+        console.error('Persist bill failed', e);
+        pushToast({ kind: 'warn', text: 'บันทึกลงเซิร์ฟเวอร์ไม่สำเร็จ (เก็บไว้ในเครื่อง)' });
+      }
+    })();
+  }, [pushToast]);
+
+  // Persist a restock entry + increment stock in DB
+  const pushRestock = useCallback((rec, productId, addQty, newCost) => {
+    setRestocks((prev) => [rec, ...prev]);
+    if (!window.sb) return;
+    (async () => {
+      try {
+        await DB.createRestock(rec);
+        const cur = await window.sb.from('products').select('stock').eq('id', productId).single();
+        if (cur.data) {
+          await window.sb.from('products')
+            .update({ stock: Number(cur.data.stock) + addQty, cost: newCost })
+            .eq('id', productId);
+        }
+      } catch (e) {
+        console.error('Persist restock failed', e);
+        pushToast({ kind: 'warn', text: 'บันทึกลงเซิร์ฟเวอร์ไม่สำเร็จ (เก็บไว้ในเครื่อง)' });
+      }
+    })();
+  }, [pushToast]);
 
   const gotoRestock = (barcode) => {
     setRouteArg(barcode || null);
@@ -57,6 +136,18 @@ function App() {
 
   // Today's date string
   const todayStr = new Date().toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+
+  // Auth gate: show login screen if Supabase configured but user not signed in
+  if (!authReady) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', color: 'var(--ink-3)' }}>
+        กำลังโหลด...
+      </div>
+    );
+  }
+  if (window.sb && !session) {
+    return <LoginScreen onSession={setSession}/>;
+  }
 
   const titles = {
     pos:       { h: 'หน้าขาย (POS)',           sub: 'รับชำระเงินและสรุปบิล' },
@@ -162,6 +253,7 @@ function App() {
         {route === 'restock' && (
           <RestockScreen products={products} setProducts={setProducts}
             restocks={restocks} setRestocks={setRestocks}
+            pushRestock={pushRestock}
             pushToast={pushToast} initialBarcode={routeArg}/>
         )}
         {route === 'dashboard' && (
@@ -232,6 +324,18 @@ function App() {
               pushToast({ kind: 'ok', text: 'รีเซ็ตข้อมูลเดโม่แล้ว' });
             }}/>
         </TweakSection>
+        {window.sb && session && (
+          <TweakSection label="บัญชี">
+            <div style={{ fontSize: 12, color: 'var(--ink-3)', marginBottom: 8 }}>
+              {session.user?.email}
+            </div>
+            <TweakButton label="ออกจากระบบ"
+              onClick={async () => {
+                await window.sb.auth.signOut();
+                pushToast({ kind: 'ok', text: 'ออกจากระบบแล้ว' });
+              }}/>
+          </TweakSection>
+        )}
       </TweaksPanel>
     </div>
   );

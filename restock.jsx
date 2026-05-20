@@ -3,7 +3,7 @@
 // Mobile mockup: iPhone frame with camera viewfinder + same form
 // Both write into the shared products list (updates stock + last-cost)
 
-function RestockScreen({ products, setProducts, restocks, setRestocks, pushToast, initialBarcode }) {
+function RestockScreen({ products, setProducts, restocks, setRestocks, pushRestock, pushToast, initialBarcode }) {
   const [code, setCode] = React.useState(initialBarcode || '');
   const [found, setFound] = React.useState(initialBarcode ? products.find((p) => p.barcode === initialBarcode) : null);
   const [qty, setQty] = React.useState('');
@@ -58,7 +58,8 @@ function RestockScreen({ products, setProducts, restocks, setRestocks, pushToast
       unitCost: costN,
       by: 'คุณวรรณา',
     };
-    setRestocks((prev) => [newRec, ...prev]);
+    if (pushRestock) pushRestock(newRec, found.id, qtyN, costN);
+    else setRestocks((prev) => [newRec, ...prev]);
     pushToast({ kind: 'ok', text: `เติม ${found.name} +${qtyN} ${found.unit}` });
     // reset
     setQty('');
@@ -222,11 +223,13 @@ function RestockScreen({ products, setProducts, restocks, setRestocks, pushToast
           <RestockMobile products={products} pushToast={pushToast}
             onSubmit={(p, q, c) => {
               setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, stock: x.stock + q, cost: c } : x));
-              setRestocks((prev) => [{
+              const rec = {
                 id: 'r' + Date.now().toString(36),
                 when: new Date().toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
                 productId: p.id, qty: q, unitCost: c, by: 'คุณวรรณา (มือถือ)',
-              }, ...prev]);
+              };
+              if (pushRestock) pushRestock(rec, p.id, q, c);
+              else setRestocks((prev) => [rec, ...prev]);
               pushToast({ kind: 'ok', text: `เติม ${p.name} +${q} ${p.unit} จากมือถือ` });
             }}/>
         </div>
