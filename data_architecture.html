@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Architecture — POS ร้านนายตะวัน</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #ECEFF1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 32px;
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  }
+  .wrapper {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 6px 32px rgba(0,0,0,0.13);
+    padding: 0;
+    overflow: hidden;
+    display: inline-block;
+  }
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  button {
+    padding: 10px 28px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity .15s;
+  }
+  button:hover { opacity: 0.85; }
+  .btn-svg  { background: #1A237E; color: white; }
+  .btn-png  { background: #2E7D32; color: white; }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+<svg id="diagram" width="1400" height="726"
+     viewBox="0 0 1400 726"
+     xmlns="http://www.w3.org/2000/svg">
+
+<defs>
+  <!-- Horizontal grey arrow (between boxes) -->
+  <marker id="arrowH" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="7" markerHeight="7" orient="auto">
+    <path d="M0 1 L9 5 L0 9 z" fill="#78909C"/>
+  </marker>
+  <!-- Vertical purple arrow (inside processing box) -->
+  <marker id="arrowV" viewBox="0 0 10 10" refX="5" refY="9"
+          markerWidth="7" markerHeight="7" orient="auto">
+    <path d="M1 0 L5 9 L9 0 z" fill="#8E24AA"/>
+  </marker>
+</defs>
+
+<!-- ════════════════════════════════════════════════════ -->
+<!--  BACKGROUND                                         -->
+<!-- ════════════════════════════════════════════════════ -->
+<rect width="1400" height="726" fill="white"/>
+
+<!-- ════════════════════════════════════════════════════ -->
+<!--  HEADER                                             -->
+<!-- ════════════════════════════════════════════════════ -->
+<text x="700" y="46" text-anchor="middle"
+      font-size="38" font-weight="900" fill="#1A237E"
+      letter-spacing="2" font-family="'Segoe UI',Arial,sans-serif">DATA ARCHITECTURE</text>
+
+<text x="700" y="73" text-anchor="middle"
+      font-size="17" fill="#546E7A"
+      font-family="'Segoe UI',Arial,sans-serif">ระบบ POS ร้านนายตะวัน  (Point of Sale System)</text>
+
+<!-- thin accent line -->
+<line x1="300" y1="84" x2="1100" y2="84" stroke="#CFD8DC" stroke-width="1.2"/>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<!--  LAYOUT REFERENCE                                                   -->
+<!--  box-w=216  gap=31  left-margin=96                                 -->
+<!--  box1 x=96→312   cx=204                                            -->
+<!--  box2 x=343→559  cx=451                                            -->
+<!--  box3 x=590→806  cx=698                                            -->
+<!--  box4 x=837→1053 cx=945                                            -->
+<!--  box5 x=1084→1300 cx=1192                                          -->
+<!--  boxes: y=128→548 (h=420)                                          -->
+<!--  horizontal arrows at y=338                                         -->
+<!-- ════════════════════════════════════════════════════════════════════ -->
+
+
+<!-- ═══════════════════════════════════════ -->
+<!--  BOX 1 · DATA SOURCE  (green #2E7D32)  -->
+<!-- ═══════════════════════════════════════ -->
+
+<!-- section badge + title -->
+<circle cx="109" cy="111" r="13" fill="#2E7D32"/>
+<text x="109" y="116" text-anchor="middle" font-size="13" font-weight="bold"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">1</text>
+<text x="130" y="117" font-size="12.5" font-weight="700" fill="#2E7D32"
+      letter-spacing="1" font-family="'Segoe UI',Arial,sans-serif">DATA SOURCE</text>
+
+<!-- box -->
+<rect x="96" y="128" width="216" height="420" rx="13"
+      fill="#F1F8E9" stroke="#2E7D32" stroke-width="2.5"/>
+
+<!-- ── monitor icon ── -->
+<!-- frame -->
+<rect x="146" y="151" width="116" height="82" rx="8"
+      fill="white" stroke="#2E7D32" stroke-width="2"/>
+<!-- screen -->
+<rect x="155" y="159" width="98" height="62" rx="4" fill="#E8F5E9"/>
+<!-- UI lines on screen -->
+<rect x="163" y="167" width="64" height="5" rx="2.5" fill="#2E7D32" opacity=".65"/>
+<rect x="163" y="178" width="78" height="3" rx="1.5" fill="#81C784" opacity=".8"/>
+<rect x="163" y="186" width="70" height="3" rx="1.5" fill="#81C784" opacity=".6"/>
+<!-- green button on screen -->
+<rect x="163" y="195" width="44" height="12" rx="4" fill="#43A047" opacity=".85"/>
+<rect x="213" y="195" width="28" height="12" rx="4" fill="#A5D6A7" opacity=".7"/>
+<!-- stand neck -->
+<rect x="196" y="233" width="16" height="12" rx="3" fill="#A5D6A7"/>
+<!-- stand base -->
+<rect x="180" y="245" width="48" height="6" rx="3" fill="#A5D6A7"/>
+
+<!-- content text -->
+<text x="204" y="273" text-anchor="middle" font-size="15.5" font-weight="700"
+      fill="#1B5E20" font-family="'Segoe UI',Arial,sans-serif">ผู้ขาย / แคชเชียร์</text>
+<text x="204" y="292" text-anchor="middle" font-size="12.5" fill="#388E3C"
+      font-family="'Segoe UI',Arial,sans-serif">(React Web Application)</text>
+
+<!-- divider -->
+<line x1="114" y1="304" x2="294" y2="304"
+      stroke="#A5D6A7" stroke-width="1.5"/>
+
+<!-- list items -->
+<circle cx="121" cy="323" r="4" fill="#43A047"/>
+<text x="131" y="327" font-size="12.5" fill="#2E7D32"
+      font-family="'Segoe UI',Arial,sans-serif">หน้าจอขายสินค้า (POS)</text>
+
+<circle cx="121" cy="348" r="4" fill="#43A047"/>
+<text x="131" y="352" font-size="12.5" fill="#2E7D32"
+      font-family="'Segoe UI',Arial,sans-serif">จัดการสต็อกสินค้า</text>
+
+<circle cx="121" cy="373" r="4" fill="#43A047"/>
+<text x="131" y="377" font-size="12.5" fill="#2E7D32"
+      font-family="'Segoe UI',Arial,sans-serif">เติมสต็อก / สั่งซื้อ</text>
+
+<circle cx="121" cy="398" r="4" fill="#43A047"/>
+<text x="131" y="402" font-size="12.5" fill="#2E7D32"
+      font-family="'Segoe UI',Arial,sans-serif">ดูรายงาน Dashboard</text>
+
+<circle cx="121" cy="423" r="4" fill="#43A047"/>
+<text x="131" y="427" font-size="12.5" fill="#2E7D32"
+      font-family="'Segoe UI',Arial,sans-serif">ตั้งค่า / Auth ระบบ</text>
+
+<!-- tech badge -->
+<rect x="118" y="486" width="176" height="24" rx="12"
+      fill="#2E7D32" opacity=".1"/>
+<text x="206" y="502" text-anchor="middle" font-size="11.5" fill="#2E7D32"
+      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">React + Supabase JS SDK</text>
+
+<!-- description below box -->
+<text x="204" y="565" text-anchor="middle" font-size="12" fill="#607D8B"
+      font-family="'Segoe UI',Arial,sans-serif">ผู้ใช้งานโต้ตอบผ่าน</text>
+<text x="204" y="581" text-anchor="middle" font-size="12" fill="#607D8B"
+      font-family="'Segoe UI',Arial,sans-serif">Web Browser</text>
+
+
+<!-- ════════════════════════════════ -->
+<!--  BOX 2 · INPUT  (blue #1565C0)  -->
+<!-- ════════════════════════════════ -->
+
+<circle cx="356" cy="111" r="13" fill="#1565C0"/>
+<text x="356" y="116" text-anchor="middle" font-size="13" font-weight="bold"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">2</text>
+<text x="377" y="117" font-size="12.5" font-weight="700" fill="#1565C0"
+      letter-spacing="1" font-family="'Segoe UI',Arial,sans-serif">INPUT</text>
+
+<rect x="343" y="128" width="216" height="420" rx="13"
+      fill="#E8F4FD" stroke="#1565C0" stroke-width="2.5"/>
+
+<!-- ── barcode scanner icon ── -->
+<rect x="393" y="151" width="116" height="80" rx="8"
+      fill="white" stroke="#1565C0" stroke-width="2"/>
+<!-- barcode bars -->
+<rect x="404" y="163" width="5"  height="48" rx="1" fill="#1565C0"/>
+<rect x="413" y="163" width="3"  height="48" rx="1" fill="#1565C0"/>
+<rect x="419" y="163" width="6"  height="48" rx="1" fill="#1565C0"/>
+<rect x="429" y="163" width="2"  height="48" rx="1" fill="#1565C0"/>
+<rect x="434" y="163" width="5"  height="48" rx="1" fill="#1565C0"/>
+<rect x="443" y="163" width="4"  height="48" rx="1" fill="#1565C0"/>
+<rect x="451" y="163" width="2"  height="48" rx="1" fill="#1565C0"/>
+<rect x="456" y="163" width="6"  height="48" rx="1" fill="#1565C0"/>
+<rect x="466" y="163" width="3"  height="48" rx="1" fill="#1565C0"/>
+<rect x="472" y="163" width="5"  height="48" rx="1" fill="#1565C0"/>
+<rect x="481" y="163" width="2"  height="48" rx="1" fill="#1565C0"/>
+<rect x="486" y="163" width="4"  height="48" rx="1" fill="#1565C0"/>
+<!-- scan line -->
+<line x1="404" y1="187" x2="490" y2="187"
+      stroke="#F44336" stroke-width="2.5" opacity=".9"/>
+<!-- number below bars -->
+<text x="447" y="225" text-anchor="middle" font-size="9.5" fill="#1565C0"
+      letter-spacing="1.5" font-family="monospace">8851959132019</text>
+
+<!-- content text -->
+<text x="451" y="254" text-anchor="middle" font-size="15.5" font-weight="700"
+      fill="#0D47A1" font-family="'Segoe UI',Arial,sans-serif">Barcode Scanner</text>
+<text x="451" y="273" text-anchor="middle" font-size="12.5" fill="#1565C0"
+      font-family="'Segoe UI',Arial,sans-serif">+ Manual / Category Entry</text>
+
+<line x1="361" y1="285" x2="541" y2="285"
+      stroke="#90CAF9" stroke-width="1.5"/>
+
+<circle cx="368" cy="304" r="4" fill="#1E88E5"/>
+<text x="378" y="308" font-size="12.5" fill="#0D47A1"
+      font-family="'Segoe UI',Arial,sans-serif">สแกนบาร์โค้ด (HID mode)</text>
+
+<circle cx="368" cy="329" r="4" fill="#1E88E5"/>
+<text x="378" y="333" font-size="12.5" fill="#0D47A1"
+      font-family="'Segoe UI',Arial,sans-serif">ค้นหา / เลือกสินค้า</text>
+
+<circle cx="368" cy="354" r="4" fill="#1E88E5"/>
+<text x="378" y="358" font-size="12.5" fill="#0D47A1"
+      font-family="'Segoe UI',Arial,sans-serif">กำหนดจำนวนสินค้า</text>
+
+<circle cx="368" cy="379" r="4" fill="#1E88E5"/>
+<text x="378" y="383" font-size="12.5" fill="#0D47A1"
+      font-family="'Segoe UI',Arial,sans-serif">เลือกช่องทางชำระเงิน</text>
+
+<circle cx="368" cy="404" r="4" fill="#1E88E5"/>
+<text x="378" y="408" font-size="12.5" fill="#0D47A1"
+      font-family="'Segoe UI',Arial,sans-serif">บันทึกการเติมสต็อก</text>
+
+<rect x="365" y="467" width="172" height="24" rx="12"
+      fill="#1565C0" opacity=".1"/>
+<text x="451" y="483" text-anchor="middle" font-size="11.5" fill="#1565C0"
+      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">HTML5 Keyboard / HID API</text>
+
+<text x="451" y="565" text-anchor="middle" font-size="12" fill="#607D8B"
+      font-family="'Segoe UI',Arial,sans-serif">รับข้อมูลสินค้าเข้าสู่</text>
+<text x="451" y="581" text-anchor="middle" font-size="12" fill="#607D8B"
+      font-family="'Segoe UI',Arial,sans-serif">ระบบการขาย</text>
+
+
+<!-- ══════════════════════════════════════ -->
+<!--  BOX 3 · PROCESSING  (purple #6A1B9A) -->
+<!-- ══════════════════════════════════════ -->
+
+<circle cx="603" cy="111" r="13" fill="#6A1B9A"/>
+<text x="603" y="116" text-anchor="middle" font-size="13" font-weight="bold"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">3</text>
+<text x="624" y="117" font-size="12.5" font-weight="700" fill="#6A1B9A"
+      letter-spacing="1" font-family="'Segoe UI',Arial,sans-serif">PROCESSING</text>
+
+<rect x="590" y="128" width="216" height="420" rx="13"
+      fill="#F3E5F5" stroke="#6A1B9A" stroke-width="2.5"/>
+
+<!-- ── Step 1: Validate ── -->
+<rect x="608" y="146" width="180" height="52" rx="8"
+      fill="white" stroke="#8E24AA" stroke-width="1.5" stroke-dasharray="5,3"/>
+<!-- icon circle -->
+<circle cx="630" cy="172" r="13" fill="#8E24AA" opacity=".15"/>
+<text x="630" y="177" text-anchor="middle" font-size="15" fill="#6A1B9A">✓</text>
+<!-- step text -->
+<text x="715" y="165" text-anchor="middle" font-size="13" font-weight="600"
+      fill="#4A148C" font-family="'Segoe UI',Arial,sans-serif">Validate</text>
+<text x="715" y="183" text-anchor="middle" font-size="11.5" fill="#7B1FA2"
+      font-family="'Segoe UI',Arial,sans-serif">(ตรวจสอบสินค้า / ราคา)</text>
+
+<!-- arrow 1→2 -->
+<line x1="698" y1="200" x2="698" y2="211"
+      stroke="#AB47BC" stroke-width="2" marker-end="url(#arrowV)"/>
+
+<!-- ── Step 2: Calculate ── -->
+<rect x="608" y="216" width="180" height="52" rx="8"
+      fill="white" stroke="#8E24AA" stroke-width="1.5" stroke-dasharray="5,3"/>
+<circle cx="630" cy="242" r="13" fill="#8E24AA" opacity=".15"/>
+<text x="630" y="248" text-anchor="middle" font-size="16" fill="#6A1B9A"
+      font-family="serif">Σ</text>
+<text x="715" y="235" text-anchor="middle" font-size="13" font-weight="600"
+      fill="#4A148C" font-family="'Segoe UI',Arial,sans-serif">Calculate</text>
+<text x="715" y="253" text-anchor="middle" font-size="11.5" fill="#7B1FA2"
+      font-family="'Segoe UI',Arial,sans-serif">(คำนวณยอด + กำไร)</text>
+
+<!-- arrow 2→3 -->
+<line x1="698" y1="270" x2="698" y2="281"
+      stroke="#AB47BC" stroke-width="2" marker-end="url(#arrowV)"/>
+
+<!-- ── Step 3: Record ── -->
+<rect x="608" y="286" width="180" height="52" rx="8"
+      fill="white" stroke="#8E24AA" stroke-width="1.5" stroke-dasharray="5,3"/>
+<circle cx="630" cy="312" r="13" fill="#8E24AA" opacity=".15"/>
+<!-- document icon (lines) -->
+<rect x="623" y="304" width="14" height="2.5" rx="1" fill="#6A1B9A"/>
+<rect x="623" y="309" width="14" height="2.5" rx="1" fill="#6A1B9A"/>
+<rect x="623" y="314" width="10" height="2.5" rx="1" fill="#6A1B9A"/>
+<text x="715" y="305" text-anchor="middle" font-size="13" font-weight="600"
+      fill="#4A148C" font-family="'Segoe UI',Arial,sans-serif">Record</text>
+<text x="715" y="323" text-anchor="middle" font-size="11.5" fill="#7B1FA2"
+      font-family="'Segoe UI',Arial,sans-serif">(บันทึก Bill / bill_items)</text>
+
+<!-- arrow 3→4 -->
+<line x1="698" y1="340" x2="698" y2="351"
+      stroke="#AB47BC" stroke-width="2" marker-end="url(#arrowV)"/>
+
+<!-- ── Step 4: Update Stock ── -->
+<rect x="608" y="356" width="180" height="52" rx="8"
+      fill="white" stroke="#8E24AA" stroke-width="1.5" stroke-dasharray="5,3"/>
+<circle cx="630" cy="382" r="13" fill="#8E24AA" opacity=".15"/>
+<!-- refresh icon (arc + arrow) - simplified as circular text -->
+<text x="630" y="389" text-anchor="middle" font-size="17" fill="#6A1B9A">↻</text>
+<text x="715" y="375" text-anchor="middle" font-size="13" font-weight="600"
+      fill="#4A148C" font-family="'Segoe UI',Arial,sans-serif">Update Stock</text>
+<text x="715" y="393" text-anchor="middle" font-size="11.5" fill="#7B1FA2"
+      font-family="'Segoe UI',Arial,sans-serif">(อัพเดทสต็อกสินค้า)</text>
+
+<!-- realtime note -->
+<rect x="614" y="422" width="168" height="24" rx="12"
+      fill="#6A1B9A" opacity=".1"/>
+<text x="698" y="438" text-anchor="middle" font-size="11.5" fill="#4A148C"
+      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">Realtime → Supabase WebSocket</text>
+
+<text x="698" y="565" text-anchor="middle" font-size="12" fill="#607D8B"
+      font-family="'Segoe UI',Arial,sans-serif">ประมวลผลธุรกรรมอัตโนมัติ</text>
+<text x="698" y="581" text-anchor="middle" font-size="12" fill="#607D8B"
+      font-family="'Segoe UI',Arial,sans-serif">(React SPA + JavaScript)</text>
+
+
+<!-- ════════════════════════════════════ -->
+<!--  BOX 4 · DATA STORAGE  (teal)       -->
+<!-- ════════════════════════════════════ -->
+
+<circle cx="850" cy="111" r="13" fill="#00695C"/>
+<text x="850" y="116" text-anchor="middle" font-size="13" font-weight="bold"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">4</text>
+<text x="871" y="117" font-size="12.5" font-weight="700" fill="#00695C"
+      letter-spacing="1" font-family="'Segoe UI',Arial,sans-serif">DATA STORAGE</text>
+
+<rect x="837" y="128" width="216" height="420" rx="13"
+      fill="#E0F2F1" stroke="#00695C" stroke-width="2.5"/>
+
+<!-- ── database cylinder icon ── -->
+<!-- cylinder body -->
+<ellipse cx="945" cy="168" rx="42" ry="13" fill="#26A69A"/>
+<rect x="903" y="168" width="84" height="48" fill="#26A69A"/>
+<ellipse cx="945" cy="216" rx="42" ry="13" fill="#00897B"/>
+<!-- highlight stripe on cylinder -->
+<rect x="903" y="175" width="84" height="8" fill="#4DB6AC" opacity=".5"/>
+<!-- top ellipse (shiny) -->
+<ellipse cx="945" cy="168" rx="42" ry="13" fill="#4DB6AC"/>
+
+<!-- Supabase label -->
+<text x="945" y="244" text-anchor="middle" font-size="13.5" font-weight="700"
+      fill="#004D40" letter-spacing="0.5" font-family="'Segoe UI',Arial,sans-serif">Supabase</text>
+<text x="945" y="262" text-anchor="middle" font-size="12" fill="#00695C"
+      font-family="'Segoe UI',Arial,sans-serif">PostgreSQL + RLS + Realtime</text>
+
+<line x1="855" y1="274" x2="1035" y2="274"
+      stroke="#80CBC4" stroke-width="1.5"/>
+
+<!-- table rows -->
+<rect x="856" y="284" width="178" height="26" rx="6"
+      fill="white" stroke="#00695C" stroke-width="1" opacity=".85"/>
+<text x="869" y="301" font-size="12.5" fill="#004D40"
+      font-family="'Segoe UI',Arial,sans-serif">▪  bills / bill_items</text>
+
+<rect x="856" y="316" width="178" height="26" rx="6"
+      fill="white" stroke="#00695C" stroke-width="1" opacity=".85"/>
+<text x="869" y="333" font-size="12.5" fill="#004D40"
+      font-family="'Segoe UI',Arial,sans-serif">▪  products / categories</text>
+
+<rect x="856" y="348" width="178" height="26" rx="6"
+      fill="white" stroke="#00695C" stroke-width="1" opacity=".85"/>
+<text x="869" y="365" font-size="12.5" fill="#004D40"
+      font-family="'Segoe UI',Arial,sans-serif">▪  restocks</text>
+
+<rect x="856" y="380" width="178" height="26" rx="6"
+      fill="white" stroke="#00695C" stroke-width="1" opacity=".85"/>
+<text x="869" y="397" font-size="12.5" fill="#004D40"
+      font-family="'Segoe UI',Arial,sans-serif">▪  settings</text>
+
+<!-- RLS badge -->
+<rect x="871" y="418" width="148" height="24" rx="12"
+      fill="#00695C" opacity=".15"/>
+<text x="945" y="434" text-anchor="middle" font-size="11.5" fill="#004D40"
+      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">Row Level Security (RLS)</text>
+
+<!-- auto backup note -->
+<rect x="871" y="448" width="148" height="24" rx="12"
+      fill="#00695C" opacity=".1"/>
+<text x="945" y="464" text-anchor="middle" font-size="11.5" fill="#00695C"
+      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">Auto Backup · Cloud ☁</text>
+
+<text x="945" y="565" text-anchor="middle" font-size="12" fill="#607D8B"
+      font-family="'Segoe UI',Arial,sans-serif">จัดเก็บข้อมูลปลอดภัย</text>
+<text x="945" y="581" text-anchor="middle" font-size="12" fill="#607D8B"
+      font-family="'Segoe UI',Arial,sans-serif">บน Supabase Cloud</text>
+
+
+<!-- ══════════════════════════════════════════ -->
+<!--  BOX 5 · VISUALIZATION  (red #B71C1C)     -->
+<!-- ══════════════════════════════════════════ -->
+
+<circle cx="1097" cy="111" r="13" fill="#C62828"/>
+<text x="1097" y="116" text-anchor="middle" font-size="13" font-weight="bold"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">5</text>
+<text x="1118" y="117" font-size="12.5" font-weight="700" fill="#C62828"
+      letter-spacing="1" font-family="'Segoe UI',Arial,sans-serif">VISUALIZATION</text>
+
+<rect x="1084" y="128" width="216" height="420" rx="13"
+      fill="#FFEBEE" stroke="#C62828" stroke-width="2.5"/>
+
+<!-- ── bar chart icon ── -->
+<rect x="1134" y="151" width="116" height="80" rx="8"
+      fill="white" stroke="#C62828" stroke-width="2" opacity=".85"/>
+<!-- bars -->
+<rect x="1146" y="187" width="14" height="34" rx="2.5" fill="#EF5350"/>
+<rect x="1165" y="172" width="14" height="49" rx="2.5" fill="#E53935"/>
+<rect x="1184" y="163" width="14" height="58" rx="2.5" fill="#C62828"/>
+<rect x="1203" y="177" width="14" height="44" rx="2.5" fill="#EF5350"/>
+<rect x="1222" y="167" width="14" height="54" rx="2.5" fill="#B71C1C"/>
+<!-- baseline -->
+<line x1="1146" y1="221" x2="1238" y2="221"
+      stroke="#B71C1C" stroke-width="2"/>
+<!-- trend line -->
+<polyline points="1153,202 1172,188 1191,173 1210,183 1229,170"
+          stroke="#FF8F00" stroke-width="2.2" fill="none" stroke-dasharray="4,2.5"/>
+
+<!-- Dashboard label pill -->
+<rect x="1107" y="244" width="170" height="27" rx="13.5"
+      fill="#C62828" opacity=".13"/>
+<text x="1192" y="262" text-anchor="middle" font-size="13.5" font-weight="700"
+      fill="#B71C1C" font-family="'Segoe UI',Arial,sans-serif">Dashboard &amp; Forecast</text>
+
+<text x="1192" y="290" text-anchor="middle" font-size="15" font-weight="700"
+      fill="#7F0000" font-family="'Segoe UI',Arial,sans-serif">Reports &amp; Analytics</text>
+<text x="1192" y="308" text-anchor="middle" font-size="12.5" fill="#C62828"
+      font-family="'Segoe UI',Arial,sans-serif">+ AI Egg Demand Forecast</text>
+
+<line x1="1102" y1="320" x2="1282" y2="320"
+      stroke="#EF9A9A" stroke-width="1.5"/>
+
+<circle cx="1109" cy="339" r="4" fill="#E53935"/>
+<text x="1119" y="343" font-size="12.5" fill="#7F0000"
+      font-family="'Segoe UI',Arial,sans-serif">ยอดขายรายวัน / เดือน</text>
+
+<circle cx="1109" cy="364" r="4" fill="#E53935"/>
+<text x="1119" y="368" font-size="12.5" fill="#7F0000"
+      font-family="'Segoe UI',Arial,sans-serif">กำไร / ขาดทุน</text>
+
+<circle cx="1109" cy="389" r="4" fill="#E53935"/>
+<text x="1119" y="393" font-size="12.5" fill="#7F0000"
+      font-family="'Segoe UI',Arial,sans-serif">สินค้าขายดี / ใกล้หมด</text>
+
+<circle cx="1109" cy="414" r="4" fill="#E53935"/>
+<text x="1119" y="418" font-size="12.5" fill="#7F0000"
+      font-family="'Segoe UI',Arial,sans-serif">พยากรณ์ไข่ (7 วันล่วงหน้า)</text>
+
+<circle cx="1109" cy="439" r="4" fill="#E53935"/>
+<text x="1119" y="443" font-size="12.5" fill="#7F0000"
+      font-family="'Segoe UI',Arial,sans-serif">แจ้งเตือน Low Stock</text>
+
+<rect x="1109" y="467" width="166" height="24" rx="12"
+      fill="#C62828" opacity=".1"/>
+<text x="1192" y="483" text-anchor="middle" font-size="11.5" fill="#B71C1C"
+      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">Real-time · Supabase Realtime</text>
+
+<text x="1192" y="565" text-anchor="middle" font-size="12" fill="#607D8B"
+      font-family="'Segoe UI',Arial,sans-serif">แสดงผลและวิเคราะห์</text>
+<text x="1192" y="581" text-anchor="middle" font-size="12" fill="#607D8B"
+      font-family="'Segoe UI',Arial,sans-serif">ข้อมูลแบบ Real-time</text>
+
+
+<!-- ════════════════════════════════════ -->
+<!--  HORIZONTAL ARROWS (between boxes)  -->
+<!--  at y=338                           -->
+<!-- ════════════════════════════════════ -->
+
+<!-- Box1 → Box2  (x=314 → x=340) -->
+<line x1="315" y1="338" x2="339" y2="338"
+      stroke="#78909C" stroke-width="2.5" marker-end="url(#arrowH)"/>
+
+<!-- Box2 → Box3  (x=561 → x=587) -->
+<line x1="562" y1="338" x2="586" y2="338"
+      stroke="#78909C" stroke-width="2.5" marker-end="url(#arrowH)"/>
+
+<!-- Box3 → Box4  (x=808 → x=834) -->
+<line x1="809" y1="338" x2="833" y2="338"
+      stroke="#78909C" stroke-width="2.5" marker-end="url(#arrowH)"/>
+
+<!-- Box4 → Box5  (x=1055 → x=1081) -->
+<line x1="1056" y1="338" x2="1080" y2="338"
+      stroke="#78909C" stroke-width="2.5" marker-end="url(#arrowH)"/>
+
+
+<!-- ═══════════════════════ -->
+<!--  LEGEND                -->
+<!-- ═══════════════════════ -->
+<rect x="96" y="606" width="1204" height="56" rx="10"
+      fill="#FAFAFA" stroke="#E0E0E0" stroke-width="1.5"/>
+
+<!-- 1 -->
+<circle cx="130" cy="634" r="11" fill="#2E7D32"/>
+<text x="130" y="639" text-anchor="middle" font-size="11" font-weight="bold"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">1</text>
+<text x="147" y="639" font-size="13" fill="#333"
+      font-family="'Segoe UI',Arial,sans-serif">Data Source</text>
+
+<!-- 2 -->
+<circle cx="270" cy="634" r="11" fill="#1565C0"/>
+<text x="270" y="639" text-anchor="middle" font-size="11" font-weight="bold"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">2</text>
+<text x="287" y="639" font-size="13" fill="#333"
+      font-family="'Segoe UI',Arial,sans-serif">Input</text>
+
+<!-- 3 -->
+<circle cx="378" cy="634" r="11" fill="#6A1B9A"/>
+<text x="378" y="639" text-anchor="middle" font-size="11" font-weight="bold"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">3</text>
+<text x="395" y="639" font-size="13" fill="#333"
+      font-family="'Segoe UI',Arial,sans-serif">Processing</text>
+
+<!-- 4 -->
+<circle cx="517" cy="634" r="11" fill="#00695C"/>
+<text x="517" y="639" text-anchor="middle" font-size="11" font-weight="bold"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">4</text>
+<text x="534" y="639" font-size="13" fill="#333"
+      font-family="'Segoe UI',Arial,sans-serif">Data Storage</text>
+
+<!-- 5 -->
+<circle cx="677" cy="634" r="11" fill="#C62828"/>
+<text x="677" y="639" text-anchor="middle" font-size="11" font-weight="bold"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">5</text>
+<text x="694" y="639" font-size="13" fill="#333"
+      font-family="'Segoe UI',Arial,sans-serif">Visualization</text>
+
+<!-- arrow symbol in legend -->
+<line x1="834" y1="634" x2="856" y2="634"
+      stroke="#78909C" stroke-width="2.5" marker-end="url(#arrowH)"/>
+<text x="866" y="639" font-size="13" fill="#333"
+      font-family="'Segoe UI',Arial,sans-serif">Data Flow</text>
+
+<!-- Supabase Realtime note -->
+<text x="1070" y="628" font-size="11" fill="#888"
+      font-family="'Segoe UI',Arial,sans-serif">Stack: React · Supabase · PostgreSQL · JavaScript</text>
+<text x="1070" y="647" font-size="11" fill="#888"
+      font-family="'Segoe UI',Arial,sans-serif">ร้านนายตะวัน POS · 2026</text>
+
+</svg>
+</div>
+
+<div class="btn-row">
+  <button class="btn-svg" onclick="downloadSVG()">⬇ Download SVG</button>
+  <button class="btn-png" onclick="downloadPNG()">⬇ Download PNG</button>
+</div>
+
+<script>
+function downloadSVG() {
+  const svg = document.getElementById('diagram');
+  const s = new XMLSerializer().serializeToString(svg);
+  const blob = new Blob([s], { type: 'image/svg+xml;charset=utf-8' });
+  trigger(URL.createObjectURL(blob), 'data-architecture-pos.svg');
+}
+
+function downloadPNG() {
+  const svg = document.getElementById('diagram');
+  const s = new XMLSerializer().serializeToString(svg);
+  const img = new Image();
+  const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(s)));
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = 1400; c.height = 726;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, 1400, 726);
+    ctx.drawImage(img, 0, 0);
+    trigger(c.toDataURL('image/png'), 'data-architecture-pos.png');
+  };
+  img.src = url;
+}
+
+function trigger(href, name) {
+  const a = document.createElement('a');
+  a.href = href; a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+</body>
+</html>
