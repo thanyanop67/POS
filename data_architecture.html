@@ -2,595 +2,501 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Data Architecture — POS ร้านนายตะวัน</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #ECEFF1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 24px 16px 32px;
-    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  }
-  .wrapper {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 6px 32px rgba(0,0,0,0.13);
-    padding: 0;
-    overflow: hidden;
-    display: inline-block;
-  }
-  .btn-row {
-    display: flex;
-    gap: 12px;
-    margin-top: 20px;
-  }
-  button {
-    padding: 10px 28px;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    transition: opacity .15s;
-  }
-  button:hover { opacity: 0.85; }
-  .btn-svg  { background: #1A237E; color: white; }
-  .btn-png  { background: #2E7D32; color: white; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#DDDFE8;display:flex;flex-direction:column;align-items:center;
+       padding:28px 16px 36px;font-family:'Segoe UI','Helvetica Neue',Arial,sans-serif}
+  .wrap{background:white;display:inline-block;border-radius:14px;overflow:hidden;
+        box-shadow:0 10px 48px rgba(0,0,0,.18)}
+  .btns{display:flex;gap:12px;margin-top:18px}
+  button{padding:10px 28px;border:none;border-radius:8px;font-size:14px;
+         font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s}
+  button:hover{opacity:.83}
+  .bsvg{background:#1A237E;color:#fff}
+  .bpng{background:#1B5E20;color:#fff}
 </style>
 </head>
 <body>
-
-<div class="wrapper">
-<svg id="diagram" width="1400" height="726"
-     viewBox="0 0 1400 726"
+<div class="wrap">
+<svg id="d" width="1200" height="810" viewBox="0 0 1200 810"
      xmlns="http://www.w3.org/2000/svg">
-
 <defs>
-  <!-- Horizontal grey arrow (between boxes) -->
-  <marker id="arrowH" viewBox="0 0 10 10" refX="9" refY="5"
-          markerWidth="7" markerHeight="7" orient="auto">
-    <path d="M0 1 L9 5 L0 9 z" fill="#78909C"/>
-  </marker>
-  <!-- Vertical purple arrow (inside processing box) -->
-  <marker id="arrowV" viewBox="0 0 10 10" refX="5" refY="9"
-          markerWidth="7" markerHeight="7" orient="auto">
-    <path d="M1 0 L5 9 L9 0 z" fill="#8E24AA"/>
-  </marker>
+  <!-- ── Filters ── -->
+  <filter id="sh" x="-8%" y="-8%" width="120%" height="140%">
+    <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="rgba(0,0,0,.40)"/>
+  </filter>
+  <filter id="shSm" x="-4%" y="-4%" width="110%" height="120%">
+    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="rgba(0,0,0,.30)"/>
+  </filter>
+
+  <!-- ── Green gradients ── -->
+  <radialGradient id="gG" cx="50%" cy="42%" r="68%" gradientUnits="objectBoundingBox">
+    <stop offset="0%"   stop-color="#31A348"/>
+    <stop offset="55%"  stop-color="#1C7A30"/>
+    <stop offset="100%" stop-color="#0C4519"/>
+  </radialGradient>
+  <linearGradient id="gGtop" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%"   stop-color="#278C3C"/>
+    <stop offset="45%"  stop-color="#4FC468"/>
+    <stop offset="100%" stop-color="#278C3C"/>
+  </linearGradient>
+  <linearGradient id="gGbottom" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%"   stop-color="#0A3A13"/>
+    <stop offset="50%"  stop-color="#155A22"/>
+    <stop offset="100%" stop-color="#0A3A13"/>
+  </linearGradient>
+
+  <!-- ── Blue gradients ── -->
+  <radialGradient id="gB" cx="50%" cy="42%" r="68%" gradientUnits="objectBoundingBox">
+    <stop offset="0%"   stop-color="#2A5FCC"/>
+    <stop offset="55%"  stop-color="#163FA8"/>
+    <stop offset="100%" stop-color="#081A72"/>
+  </radialGradient>
+  <linearGradient id="gBtop" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%"   stop-color="#1840B0"/>
+    <stop offset="45%"  stop-color="#3C72E8"/>
+    <stop offset="100%" stop-color="#1840B0"/>
+  </linearGradient>
+  <linearGradient id="gBbottom" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%"   stop-color="#060F48"/>
+    <stop offset="50%"  stop-color="#0E1E78"/>
+    <stop offset="100%" stop-color="#060F48"/>
+  </linearGradient>
+
+  <!-- ── Purple gradients ── -->
+  <radialGradient id="gP" cx="50%" cy="42%" r="68%" gradientUnits="objectBoundingBox">
+    <stop offset="0%"   stop-color="#6E35B0"/>
+    <stop offset="55%"  stop-color="#4B1E88"/>
+    <stop offset="100%" stop-color="#270A50"/>
+  </radialGradient>
+  <linearGradient id="gPtop" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%"   stop-color="#501A96"/>
+    <stop offset="45%"  stop-color="#8848CC"/>
+    <stop offset="100%" stop-color="#501A96"/>
+  </linearGradient>
+  <linearGradient id="gPbottom" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%"   stop-color="#130528"/>
+    <stop offset="50%"  stop-color="#250A48"/>
+    <stop offset="100%" stop-color="#130528"/>
+  </linearGradient>
+
+  <!-- ── Arrow gradients ── -->
+  <linearGradient id="gArrG" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#2EA845"/>
+    <stop offset="100%" stop-color="#1A6828"/>
+  </linearGradient>
+  <linearGradient id="gArrB" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%"   stop-color="#2A5FCC"/>
+    <stop offset="100%" stop-color="#1030A0"/>
+  </linearGradient>
 </defs>
 
-<!-- ════════════════════════════════════════════════════ -->
-<!--  BACKGROUND                                         -->
-<!-- ════════════════════════════════════════════════════ -->
-<rect width="1400" height="726" fill="white"/>
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!--  TITLE                                           -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<rect width="1200" height="810" fill="white"/>
 
-<!-- ════════════════════════════════════════════════════ -->
-<!--  HEADER                                             -->
-<!-- ════════════════════════════════════════════════════ -->
-<text x="700" y="46" text-anchor="middle"
-      font-size="38" font-weight="900" fill="#1A237E"
-      letter-spacing="2" font-family="'Segoe UI',Arial,sans-serif">DATA ARCHITECTURE</text>
-
-<text x="700" y="73" text-anchor="middle"
-      font-size="17" fill="#546E7A"
-      font-family="'Segoe UI',Arial,sans-serif">ระบบ POS ร้านนายตะวัน  (Point of Sale System)</text>
-
-<!-- thin accent line -->
-<line x1="300" y1="84" x2="1100" y2="84" stroke="#CFD8DC" stroke-width="1.2"/>
+<text x="600" y="26" text-anchor="middle" font-size="21" font-weight="800"
+      fill="#1A237E" letter-spacing="1.5" font-family="'Segoe UI',Arial,sans-serif">DATA ARCHITECTURE · ระบบ POS ร้านนายตะวัน</text>
 
 
-<!-- ════════════════════════════════════════════════════════════════════ -->
-<!--  LAYOUT REFERENCE                                                   -->
-<!--  box-w=216  gap=31  left-margin=96                                 -->
-<!--  box1 x=96→312   cx=204                                            -->
-<!--  box2 x=343→559  cx=451                                            -->
-<!--  box3 x=590→806  cx=698                                            -->
-<!--  box4 x=837→1053 cx=945                                            -->
-<!--  box5 x=1084→1300 cx=1192                                          -->
-<!--  boxes: y=128→548 (h=420)                                          -->
-<!--  horizontal arrows at y=338                                         -->
-<!-- ════════════════════════════════════════════════════════════════════ -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!--  LAYER 1 ·  DATA INPUT LAYER  (GREEN)                          -->
+<!--  3D-strip y=38→65   main-body y=65→248                         -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
 
+<!-- drop shadow -->
+<polygon points="28,65 1172,65 1172,248 28,248"
+         fill="#091F0F" opacity=".35" transform="translate(4,14)" filter="url(#sh)"/>
 
-<!-- ═══════════════════════════════════════ -->
-<!--  BOX 1 · DATA SOURCE  (green #2E7D32)  -->
-<!-- ═══════════════════════════════════════ -->
+<!-- bottom edge thickness strip -->
+<polygon points="28,244 1172,244 1172,250 28,250" fill="url(#gGbottom)"/>
 
-<!-- section badge + title -->
-<circle cx="109" cy="111" r="13" fill="#2E7D32"/>
-<text x="109" y="116" text-anchor="middle" font-size="13" font-weight="bold"
-      fill="white" font-family="'Segoe UI',Arial,sans-serif">1</text>
-<text x="130" y="117" font-size="12.5" font-weight="700" fill="#2E7D32"
-      letter-spacing="1" font-family="'Segoe UI',Arial,sans-serif">DATA SOURCE</text>
+<!-- main body -->
+<polygon points="28,65 1172,65 1172,248 28,248" fill="url(#gG)"/>
 
-<!-- box -->
-<rect x="96" y="128" width="216" height="420" rx="13"
-      fill="#F1F8E9" stroke="#2E7D32" stroke-width="2.5"/>
+<!-- top 3D face (thickness illusion) -->
+<polygon points="36,38 1164,38 1172,65 28,65" fill="url(#gGtop)"/>
+<!-- top highlight edge -->
+<line x1="36" y1="38" x2="1164" y2="38" stroke="#78F090" stroke-width="1.8" opacity=".55"/>
 
-<!-- ── monitor icon ── -->
-<!-- frame -->
-<rect x="146" y="151" width="116" height="82" rx="8"
-      fill="white" stroke="#2E7D32" stroke-width="2"/>
-<!-- screen -->
-<rect x="155" y="159" width="98" height="62" rx="4" fill="#E8F5E9"/>
-<!-- UI lines on screen -->
-<rect x="163" y="167" width="64" height="5" rx="2.5" fill="#2E7D32" opacity=".65"/>
-<rect x="163" y="178" width="78" height="3" rx="1.5" fill="#81C784" opacity=".8"/>
-<rect x="163" y="186" width="70" height="3" rx="1.5" fill="#81C784" opacity=".6"/>
-<!-- green button on screen -->
-<rect x="163" y="195" width="44" height="12" rx="4" fill="#43A047" opacity=".85"/>
-<rect x="213" y="195" width="28" height="12" rx="4" fill="#A5D6A7" opacity=".7"/>
-<!-- stand neck -->
-<rect x="196" y="233" width="16" height="12" rx="3" fill="#A5D6A7"/>
-<!-- stand base -->
-<rect x="180" y="245" width="48" height="6" rx="3" fill="#A5D6A7"/>
+<!-- ── circuit traces (green, decorative) ── -->
+<g stroke="#60FF88" stroke-width="1.4" opacity=".20" fill="none">
+  <!-- left side -->
+  <path d="M 55,85 H 115 V 108 H 175"/>  <circle cx="55"  cy="85"  r="3.5" fill="#60FF88"/>
+  <circle cx="115" cy="85"  r="3.5" fill="#60FF88"/>
+  <circle cx="115" cy="108" r="3.5" fill="#60FF88"/>
+  <circle cx="175" cy="108" r="3.5" fill="#60FF88"/>
+  <path d="M 60,145 H 138 V 162 H 205"/> <circle cx="60"  cy="145" r="3.5" fill="#60FF88"/>
+  <circle cx="205" cy="162" r="3.5" fill="#60FF88"/>
+  <path d="M 65,195 H 170"/>             <circle cx="65"  cy="195" r="3.5" fill="#60FF88"/>
+  <circle cx="170" cy="195" r="3.5" fill="#60FF88"/>
+  <path d="M 70,225 H 130 V 238 H 190"/>
+  <circle cx="190" cy="238" r="3.5" fill="#60FF88"/>
+  <!-- right side (mirror) -->
+  <path d="M 1145,85 H 1085 V 108 H 1025"/>
+  <circle cx="1145" cy="85"  r="3.5" fill="#60FF88"/>
+  <circle cx="1025" cy="108" r="3.5" fill="#60FF88"/>
+  <path d="M 1140,145 H 1062 V 162 H 995"/>
+  <circle cx="995"  cy="162" r="3.5" fill="#60FF88"/>
+  <path d="M 1135,195 H 1030"/>
+  <circle cx="1135" cy="195" r="3.5" fill="#60FF88"/>
+  <circle cx="1030" cy="195" r="3.5" fill="#60FF88"/>
+</g>
 
-<!-- content text -->
-<text x="204" y="273" text-anchor="middle" font-size="15.5" font-weight="700"
-      fill="#1B5E20" font-family="'Segoe UI',Arial,sans-serif">ผู้ขาย / แคชเชียร์</text>
-<text x="204" y="292" text-anchor="middle" font-size="12.5" fill="#388E3C"
-      font-family="'Segoe UI',Arial,sans-serif">(React Web Application)</text>
+<!-- ── Layer 1 heading ── -->
+<text x="600" y="96" text-anchor="middle" font-size="27" font-weight="800"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">Data Input Layer (ส่วนรับข้อมูล)</text>
+<text x="600" y="118" text-anchor="middle" font-size="14.5" fill="#AAFFC0"
+      font-family="'Segoe UI',Arial,sans-serif">Google Apps Script → React Web App: แบบฟอร์มสำหรับผู้ขายกรอกข้อมูลการขาย</text>
+<line x1="155" y1="128" x2="1045" y2="128" stroke="white" stroke-width="1" opacity=".28"/>
 
-<!-- divider -->
-<line x1="114" y1="304" x2="294" y2="304"
-      stroke="#A5D6A7" stroke-width="1.5"/>
+<!-- ── POS Form icon ── -->
+<!-- white card -->
+<rect x="240" y="138" width="100" height="96" rx="10" fill="white" opacity=".92" filter="url(#shSm)"/>
+<!-- document body -->
+<rect x="256" y="150" width="68" height="74" rx="5" fill="#1A7830"/>
+<!-- document top bar -->
+<rect x="256" y="150" width="68" height="18" rx="5" fill="#0E5020"/>
+<rect x="256" y="162" width="68" height="6" fill="#0E5020"/>
+<!-- content lines -->
+<rect x="264" y="178" width="52" height="4" rx="2" fill="white" opacity=".75"/>
+<rect x="264" y="188" width="44" height="4" rx="2" fill="white" opacity=".55"/>
+<rect x="264" y="198" width="48" height="4" rx="2" fill="white" opacity=".55"/>
+<!-- green submit button at bottom -->
+<rect x="264" y="208" width="52" height="10" rx="5" fill="#3DBD58" opacity=".95"/>
+<text x="263" y="163" font-size="10" font-weight="700" fill="white"
+      font-family="'Segoe UI',Arial,sans-serif">POS Form</text>
 
-<!-- list items -->
-<circle cx="121" cy="323" r="4" fill="#43A047"/>
-<text x="131" y="327" font-size="12.5" fill="#2E7D32"
-      font-family="'Segoe UI',Arial,sans-serif">หน้าจอขายสินค้า (POS)</text>
+<text x="290" y="250" text-anchor="middle" font-size="14" font-weight="700"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">Customer / Site Team</text>
+<text x="290" y="267" text-anchor="middle" font-size="12" fill="#AAFFC0"
+      font-family="'Segoe UI',Arial,sans-serif">พัฒนาโดยเครื่องมือ</text>
 
-<circle cx="121" cy="348" r="4" fill="#43A047"/>
-<text x="131" y="352" font-size="12.5" fill="#2E7D32"
-      font-family="'Segoe UI',Arial,sans-serif">จัดการสต็อกสินค้า</text>
+<!-- vertical divider -->
+<line x1="420" y1="136" x2="420" y2="244" stroke="white" stroke-width="1" opacity=".22"/>
 
-<circle cx="121" cy="373" r="4" fill="#43A047"/>
-<text x="131" y="377" font-size="12.5" fill="#2E7D32"
-      font-family="'Segoe UI',Arial,sans-serif">เติมสต็อก / สั่งซื้อ</text>
+<!-- ── Tech icons: React HTML5 JS ── -->
+<!-- React icon (circle bg + atom) -->
+<circle cx="530" cy="188" r="46" fill="white" opacity=".92" filter="url(#shSm)"/>
+<ellipse cx="530" cy="188" rx="32" ry="12" fill="none" stroke="#61DAFB" stroke-width="3.5"/>
+<ellipse cx="530" cy="188" rx="32" ry="12" fill="none" stroke="#61DAFB" stroke-width="3.5"
+         transform="rotate(60 530 188)"/>
+<ellipse cx="530" cy="188" rx="32" ry="12" fill="none" stroke="#61DAFB" stroke-width="3.5"
+         transform="rotate(120 530 188)"/>
+<circle cx="530" cy="188" r="5.5" fill="#61DAFB"/>
+<text x="530" y="250" text-anchor="middle" font-size="14" font-weight="700"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">React</text>
 
-<circle cx="121" cy="398" r="4" fill="#43A047"/>
-<text x="131" y="402" font-size="12.5" fill="#2E7D32"
-      font-family="'Segoe UI',Arial,sans-serif">ดูรายงาน Dashboard</text>
-
-<circle cx="121" cy="423" r="4" fill="#43A047"/>
-<text x="131" y="427" font-size="12.5" fill="#2E7D32"
-      font-family="'Segoe UI',Arial,sans-serif">ตั้งค่า / Auth ระบบ</text>
-
-<!-- tech badge -->
-<rect x="118" y="486" width="176" height="24" rx="12"
-      fill="#2E7D32" opacity=".1"/>
-<text x="206" y="502" text-anchor="middle" font-size="11.5" fill="#2E7D32"
-      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">React + Supabase JS SDK</text>
-
-<!-- description below box -->
-<text x="204" y="565" text-anchor="middle" font-size="12" fill="#607D8B"
-      font-family="'Segoe UI',Arial,sans-serif">ผู้ใช้งานโต้ตอบผ่าน</text>
-<text x="204" y="581" text-anchor="middle" font-size="12" fill="#607D8B"
-      font-family="'Segoe UI',Arial,sans-serif">Web Browser</text>
-
-
-<!-- ════════════════════════════════ -->
-<!--  BOX 2 · INPUT  (blue #1565C0)  -->
-<!-- ════════════════════════════════ -->
-
-<circle cx="356" cy="111" r="13" fill="#1565C0"/>
-<text x="356" y="116" text-anchor="middle" font-size="13" font-weight="bold"
-      fill="white" font-family="'Segoe UI',Arial,sans-serif">2</text>
-<text x="377" y="117" font-size="12.5" font-weight="700" fill="#1565C0"
-      letter-spacing="1" font-family="'Segoe UI',Arial,sans-serif">INPUT</text>
-
-<rect x="343" y="128" width="216" height="420" rx="13"
-      fill="#E8F4FD" stroke="#1565C0" stroke-width="2.5"/>
-
-<!-- ── barcode scanner icon ── -->
-<rect x="393" y="151" width="116" height="80" rx="8"
-      fill="white" stroke="#1565C0" stroke-width="2"/>
-<!-- barcode bars -->
-<rect x="404" y="163" width="5"  height="48" rx="1" fill="#1565C0"/>
-<rect x="413" y="163" width="3"  height="48" rx="1" fill="#1565C0"/>
-<rect x="419" y="163" width="6"  height="48" rx="1" fill="#1565C0"/>
-<rect x="429" y="163" width="2"  height="48" rx="1" fill="#1565C0"/>
-<rect x="434" y="163" width="5"  height="48" rx="1" fill="#1565C0"/>
-<rect x="443" y="163" width="4"  height="48" rx="1" fill="#1565C0"/>
-<rect x="451" y="163" width="2"  height="48" rx="1" fill="#1565C0"/>
-<rect x="456" y="163" width="6"  height="48" rx="1" fill="#1565C0"/>
-<rect x="466" y="163" width="3"  height="48" rx="1" fill="#1565C0"/>
-<rect x="472" y="163" width="5"  height="48" rx="1" fill="#1565C0"/>
-<rect x="481" y="163" width="2"  height="48" rx="1" fill="#1565C0"/>
-<rect x="486" y="163" width="4"  height="48" rx="1" fill="#1565C0"/>
-<!-- scan line -->
-<line x1="404" y1="187" x2="490" y2="187"
-      stroke="#F44336" stroke-width="2.5" opacity=".9"/>
-<!-- number below bars -->
-<text x="447" y="225" text-anchor="middle" font-size="9.5" fill="#1565C0"
-      letter-spacing="1.5" font-family="monospace">8851959132019</text>
-
-<!-- content text -->
-<text x="451" y="254" text-anchor="middle" font-size="15.5" font-weight="700"
-      fill="#0D47A1" font-family="'Segoe UI',Arial,sans-serif">Barcode Scanner</text>
-<text x="451" y="273" text-anchor="middle" font-size="12.5" fill="#1565C0"
-      font-family="'Segoe UI',Arial,sans-serif">+ Manual / Category Entry</text>
-
-<line x1="361" y1="285" x2="541" y2="285"
-      stroke="#90CAF9" stroke-width="1.5"/>
-
-<circle cx="368" cy="304" r="4" fill="#1E88E5"/>
-<text x="378" y="308" font-size="12.5" fill="#0D47A1"
-      font-family="'Segoe UI',Arial,sans-serif">สแกนบาร์โค้ด (HID mode)</text>
-
-<circle cx="368" cy="329" r="4" fill="#1E88E5"/>
-<text x="378" y="333" font-size="12.5" fill="#0D47A1"
-      font-family="'Segoe UI',Arial,sans-serif">ค้นหา / เลือกสินค้า</text>
-
-<circle cx="368" cy="354" r="4" fill="#1E88E5"/>
-<text x="378" y="358" font-size="12.5" fill="#0D47A1"
-      font-family="'Segoe UI',Arial,sans-serif">กำหนดจำนวนสินค้า</text>
-
-<circle cx="368" cy="379" r="4" fill="#1E88E5"/>
-<text x="378" y="383" font-size="12.5" fill="#0D47A1"
-      font-family="'Segoe UI',Arial,sans-serif">เลือกช่องทางชำระเงิน</text>
-
-<circle cx="368" cy="404" r="4" fill="#1E88E5"/>
-<text x="378" y="408" font-size="12.5" fill="#0D47A1"
-      font-family="'Segoe UI',Arial,sans-serif">บันทึกการเติมสต็อก</text>
-
-<rect x="365" y="467" width="172" height="24" rx="12"
-      fill="#1565C0" opacity=".1"/>
-<text x="451" y="483" text-anchor="middle" font-size="11.5" fill="#1565C0"
-      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">HTML5 Keyboard / HID API</text>
-
-<text x="451" y="565" text-anchor="middle" font-size="12" fill="#607D8B"
-      font-family="'Segoe UI',Arial,sans-serif">รับข้อมูลสินค้าเข้าสู่</text>
-<text x="451" y="581" text-anchor="middle" font-size="12" fill="#607D8B"
-      font-family="'Segoe UI',Arial,sans-serif">ระบบการขาย</text>
-
-
-<!-- ══════════════════════════════════════ -->
-<!--  BOX 3 · PROCESSING  (purple #6A1B9A) -->
-<!-- ══════════════════════════════════════ -->
-
-<circle cx="603" cy="111" r="13" fill="#6A1B9A"/>
-<text x="603" y="116" text-anchor="middle" font-size="13" font-weight="bold"
-      fill="white" font-family="'Segoe UI',Arial,sans-serif">3</text>
-<text x="624" y="117" font-size="12.5" font-weight="700" fill="#6A1B9A"
-      letter-spacing="1" font-family="'Segoe UI',Arial,sans-serif">PROCESSING</text>
-
-<rect x="590" y="128" width="216" height="420" rx="13"
-      fill="#F3E5F5" stroke="#6A1B9A" stroke-width="2.5"/>
-
-<!-- ── Step 1: Validate ── -->
-<rect x="608" y="146" width="180" height="52" rx="8"
-      fill="white" stroke="#8E24AA" stroke-width="1.5" stroke-dasharray="5,3"/>
-<!-- icon circle -->
-<circle cx="630" cy="172" r="13" fill="#8E24AA" opacity=".15"/>
-<text x="630" y="177" text-anchor="middle" font-size="15" fill="#6A1B9A">✓</text>
-<!-- step text -->
-<text x="715" y="165" text-anchor="middle" font-size="13" font-weight="600"
-      fill="#4A148C" font-family="'Segoe UI',Arial,sans-serif">Validate</text>
-<text x="715" y="183" text-anchor="middle" font-size="11.5" fill="#7B1FA2"
-      font-family="'Segoe UI',Arial,sans-serif">(ตรวจสอบสินค้า / ราคา)</text>
-
-<!-- arrow 1→2 -->
-<line x1="698" y1="200" x2="698" y2="211"
-      stroke="#AB47BC" stroke-width="2" marker-end="url(#arrowV)"/>
-
-<!-- ── Step 2: Calculate ── -->
-<rect x="608" y="216" width="180" height="52" rx="8"
-      fill="white" stroke="#8E24AA" stroke-width="1.5" stroke-dasharray="5,3"/>
-<circle cx="630" cy="242" r="13" fill="#8E24AA" opacity=".15"/>
-<text x="630" y="248" text-anchor="middle" font-size="16" fill="#6A1B9A"
-      font-family="serif">Σ</text>
-<text x="715" y="235" text-anchor="middle" font-size="13" font-weight="600"
-      fill="#4A148C" font-family="'Segoe UI',Arial,sans-serif">Calculate</text>
-<text x="715" y="253" text-anchor="middle" font-size="11.5" fill="#7B1FA2"
-      font-family="'Segoe UI',Arial,sans-serif">(คำนวณยอด + กำไร)</text>
-
-<!-- arrow 2→3 -->
-<line x1="698" y1="270" x2="698" y2="281"
-      stroke="#AB47BC" stroke-width="2" marker-end="url(#arrowV)"/>
-
-<!-- ── Step 3: Record ── -->
-<rect x="608" y="286" width="180" height="52" rx="8"
-      fill="white" stroke="#8E24AA" stroke-width="1.5" stroke-dasharray="5,3"/>
-<circle cx="630" cy="312" r="13" fill="#8E24AA" opacity=".15"/>
-<!-- document icon (lines) -->
-<rect x="623" y="304" width="14" height="2.5" rx="1" fill="#6A1B9A"/>
-<rect x="623" y="309" width="14" height="2.5" rx="1" fill="#6A1B9A"/>
-<rect x="623" y="314" width="10" height="2.5" rx="1" fill="#6A1B9A"/>
-<text x="715" y="305" text-anchor="middle" font-size="13" font-weight="600"
-      fill="#4A148C" font-family="'Segoe UI',Arial,sans-serif">Record</text>
-<text x="715" y="323" text-anchor="middle" font-size="11.5" fill="#7B1FA2"
-      font-family="'Segoe UI',Arial,sans-serif">(บันทึก Bill / bill_items)</text>
-
-<!-- arrow 3→4 -->
-<line x1="698" y1="340" x2="698" y2="351"
-      stroke="#AB47BC" stroke-width="2" marker-end="url(#arrowV)"/>
-
-<!-- ── Step 4: Update Stock ── -->
-<rect x="608" y="356" width="180" height="52" rx="8"
-      fill="white" stroke="#8E24AA" stroke-width="1.5" stroke-dasharray="5,3"/>
-<circle cx="630" cy="382" r="13" fill="#8E24AA" opacity=".15"/>
-<!-- refresh icon (arc + arrow) - simplified as circular text -->
-<text x="630" y="389" text-anchor="middle" font-size="17" fill="#6A1B9A">↻</text>
-<text x="715" y="375" text-anchor="middle" font-size="13" font-weight="600"
-      fill="#4A148C" font-family="'Segoe UI',Arial,sans-serif">Update Stock</text>
-<text x="715" y="393" text-anchor="middle" font-size="11.5" fill="#7B1FA2"
-      font-family="'Segoe UI',Arial,sans-serif">(อัพเดทสต็อกสินค้า)</text>
-
-<!-- realtime note -->
-<rect x="614" y="422" width="168" height="24" rx="12"
-      fill="#6A1B9A" opacity=".1"/>
-<text x="698" y="438" text-anchor="middle" font-size="11.5" fill="#4A148C"
-      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">Realtime → Supabase WebSocket</text>
-
-<text x="698" y="565" text-anchor="middle" font-size="12" fill="#607D8B"
-      font-family="'Segoe UI',Arial,sans-serif">ประมวลผลธุรกรรมอัตโนมัติ</text>
-<text x="698" y="581" text-anchor="middle" font-size="12" fill="#607D8B"
-      font-family="'Segoe UI',Arial,sans-serif">(React SPA + JavaScript)</text>
-
-
-<!-- ════════════════════════════════════ -->
-<!--  BOX 4 · DATA STORAGE  (teal)       -->
-<!-- ════════════════════════════════════ -->
-
-<circle cx="850" cy="111" r="13" fill="#00695C"/>
-<text x="850" y="116" text-anchor="middle" font-size="13" font-weight="bold"
-      fill="white" font-family="'Segoe UI',Arial,sans-serif">4</text>
-<text x="871" y="117" font-size="12.5" font-weight="700" fill="#00695C"
-      letter-spacing="1" font-family="'Segoe UI',Arial,sans-serif">DATA STORAGE</text>
-
-<rect x="837" y="128" width="216" height="420" rx="13"
-      fill="#E0F2F1" stroke="#00695C" stroke-width="2.5"/>
-
-<!-- ── database cylinder icon ── -->
-<!-- cylinder body -->
-<ellipse cx="945" cy="168" rx="42" ry="13" fill="#26A69A"/>
-<rect x="903" y="168" width="84" height="48" fill="#26A69A"/>
-<ellipse cx="945" cy="216" rx="42" ry="13" fill="#00897B"/>
-<!-- highlight stripe on cylinder -->
-<rect x="903" y="175" width="84" height="8" fill="#4DB6AC" opacity=".5"/>
-<!-- top ellipse (shiny) -->
-<ellipse cx="945" cy="168" rx="42" ry="13" fill="#4DB6AC"/>
-
-<!-- Supabase label -->
-<text x="945" y="244" text-anchor="middle" font-size="13.5" font-weight="700"
-      fill="#004D40" letter-spacing="0.5" font-family="'Segoe UI',Arial,sans-serif">Supabase</text>
-<text x="945" y="262" text-anchor="middle" font-size="12" fill="#00695C"
-      font-family="'Segoe UI',Arial,sans-serif">PostgreSQL + RLS + Realtime</text>
-
-<line x1="855" y1="274" x2="1035" y2="274"
-      stroke="#80CBC4" stroke-width="1.5"/>
-
-<!-- table rows -->
-<rect x="856" y="284" width="178" height="26" rx="6"
-      fill="white" stroke="#00695C" stroke-width="1" opacity=".85"/>
-<text x="869" y="301" font-size="12.5" fill="#004D40"
-      font-family="'Segoe UI',Arial,sans-serif">▪  bills / bill_items</text>
-
-<rect x="856" y="316" width="178" height="26" rx="6"
-      fill="white" stroke="#00695C" stroke-width="1" opacity=".85"/>
-<text x="869" y="333" font-size="12.5" fill="#004D40"
-      font-family="'Segoe UI',Arial,sans-serif">▪  products / categories</text>
-
-<rect x="856" y="348" width="178" height="26" rx="6"
-      fill="white" stroke="#00695C" stroke-width="1" opacity=".85"/>
-<text x="869" y="365" font-size="12.5" fill="#004D40"
-      font-family="'Segoe UI',Arial,sans-serif">▪  restocks</text>
-
-<rect x="856" y="380" width="178" height="26" rx="6"
-      fill="white" stroke="#00695C" stroke-width="1" opacity=".85"/>
-<text x="869" y="397" font-size="12.5" fill="#004D40"
-      font-family="'Segoe UI',Arial,sans-serif">▪  settings</text>
-
-<!-- RLS badge -->
-<rect x="871" y="418" width="148" height="24" rx="12"
-      fill="#00695C" opacity=".15"/>
-<text x="945" y="434" text-anchor="middle" font-size="11.5" fill="#004D40"
-      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">Row Level Security (RLS)</text>
-
-<!-- auto backup note -->
-<rect x="871" y="448" width="148" height="24" rx="12"
-      fill="#00695C" opacity=".1"/>
-<text x="945" y="464" text-anchor="middle" font-size="11.5" fill="#00695C"
-      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">Auto Backup · Cloud ☁</text>
-
-<text x="945" y="565" text-anchor="middle" font-size="12" fill="#607D8B"
-      font-family="'Segoe UI',Arial,sans-serif">จัดเก็บข้อมูลปลอดภัย</text>
-<text x="945" y="581" text-anchor="middle" font-size="12" fill="#607D8B"
-      font-family="'Segoe UI',Arial,sans-serif">บน Supabase Cloud</text>
-
-
-<!-- ══════════════════════════════════════════ -->
-<!--  BOX 5 · VISUALIZATION  (red #B71C1C)     -->
-<!-- ══════════════════════════════════════════ -->
-
-<circle cx="1097" cy="111" r="13" fill="#C62828"/>
-<text x="1097" y="116" text-anchor="middle" font-size="13" font-weight="bold"
+<!-- HTML5 icon -->
+<circle cx="660" cy="188" r="46" fill="white" opacity=".92" filter="url(#shSm)"/>
+<polygon points="660,152 686,152 682,192 660,198 638,192 634,152" fill="#E34F26"/>
+<polygon points="660,155 660,195 678,190 682,155" fill="#EF6529"/>
+<text x="660" y="182" text-anchor="middle" font-size="18" font-weight="900"
       fill="white" font-family="'Segoe UI',Arial,sans-serif">5</text>
-<text x="1118" y="117" font-size="12.5" font-weight="700" fill="#C62828"
-      letter-spacing="1" font-family="'Segoe UI',Arial,sans-serif">VISUALIZATION</text>
+<text x="660" y="195" text-anchor="middle" font-size="10.5" font-weight="700"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">HTML</text>
+<text x="660" y="250" text-anchor="middle" font-size="14" font-weight="700"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">HTML5</text>
 
-<rect x="1084" y="128" width="216" height="420" rx="13"
-      fill="#FFEBEE" stroke="#C62828" stroke-width="2.5"/>
-
-<!-- ── bar chart icon ── -->
-<rect x="1134" y="151" width="116" height="80" rx="8"
-      fill="white" stroke="#C62828" stroke-width="2" opacity=".85"/>
-<!-- bars -->
-<rect x="1146" y="187" width="14" height="34" rx="2.5" fill="#EF5350"/>
-<rect x="1165" y="172" width="14" height="49" rx="2.5" fill="#E53935"/>
-<rect x="1184" y="163" width="14" height="58" rx="2.5" fill="#C62828"/>
-<rect x="1203" y="177" width="14" height="44" rx="2.5" fill="#EF5350"/>
-<rect x="1222" y="167" width="14" height="54" rx="2.5" fill="#B71C1C"/>
-<!-- baseline -->
-<line x1="1146" y1="221" x2="1238" y2="221"
-      stroke="#B71C1C" stroke-width="2"/>
-<!-- trend line -->
-<polyline points="1153,202 1172,188 1191,173 1210,183 1229,170"
-          stroke="#FF8F00" stroke-width="2.2" fill="none" stroke-dasharray="4,2.5"/>
-
-<!-- Dashboard label pill -->
-<rect x="1107" y="244" width="170" height="27" rx="13.5"
-      fill="#C62828" opacity=".13"/>
-<text x="1192" y="262" text-anchor="middle" font-size="13.5" font-weight="700"
-      fill="#B71C1C" font-family="'Segoe UI',Arial,sans-serif">Dashboard &amp; Forecast</text>
-
-<text x="1192" y="290" text-anchor="middle" font-size="15" font-weight="700"
-      fill="#7F0000" font-family="'Segoe UI',Arial,sans-serif">Reports &amp; Analytics</text>
-<text x="1192" y="308" text-anchor="middle" font-size="12.5" fill="#C62828"
-      font-family="'Segoe UI',Arial,sans-serif">+ AI Egg Demand Forecast</text>
-
-<line x1="1102" y1="320" x2="1282" y2="320"
-      stroke="#EF9A9A" stroke-width="1.5"/>
-
-<circle cx="1109" cy="339" r="4" fill="#E53935"/>
-<text x="1119" y="343" font-size="12.5" fill="#7F0000"
-      font-family="'Segoe UI',Arial,sans-serif">ยอดขายรายวัน / เดือน</text>
-
-<circle cx="1109" cy="364" r="4" fill="#E53935"/>
-<text x="1119" y="368" font-size="12.5" fill="#7F0000"
-      font-family="'Segoe UI',Arial,sans-serif">กำไร / ขาดทุน</text>
-
-<circle cx="1109" cy="389" r="4" fill="#E53935"/>
-<text x="1119" y="393" font-size="12.5" fill="#7F0000"
-      font-family="'Segoe UI',Arial,sans-serif">สินค้าขายดี / ใกล้หมด</text>
-
-<circle cx="1109" cy="414" r="4" fill="#E53935"/>
-<text x="1119" y="418" font-size="12.5" fill="#7F0000"
-      font-family="'Segoe UI',Arial,sans-serif">พยากรณ์ไข่ (7 วันล่วงหน้า)</text>
-
-<circle cx="1109" cy="439" r="4" fill="#E53935"/>
-<text x="1119" y="443" font-size="12.5" fill="#7F0000"
-      font-family="'Segoe UI',Arial,sans-serif">แจ้งเตือน Low Stock</text>
-
-<rect x="1109" y="467" width="166" height="24" rx="12"
-      fill="#C62828" opacity=".1"/>
-<text x="1192" y="483" text-anchor="middle" font-size="11.5" fill="#B71C1C"
-      font-weight="600" font-family="'Segoe UI',Arial,sans-serif">Real-time · Supabase Realtime</text>
-
-<text x="1192" y="565" text-anchor="middle" font-size="12" fill="#607D8B"
-      font-family="'Segoe UI',Arial,sans-serif">แสดงผลและวิเคราะห์</text>
-<text x="1192" y="581" text-anchor="middle" font-size="12" fill="#607D8B"
-      font-family="'Segoe UI',Arial,sans-serif">ข้อมูลแบบ Real-time</text>
+<!-- JavaScript icon -->
+<circle cx="790" cy="188" r="46" fill="white" opacity=".92" filter="url(#shSm)"/>
+<rect x="756" y="154" width="68" height="68" rx="5" fill="#F7DF1E"/>
+<text x="790" y="210" text-anchor="middle" font-size="30" font-weight="900"
+      fill="#323330" font-family="'Arial Black',Arial,sans-serif">JS</text>
+<text x="790" y="250" text-anchor="middle" font-size="14" font-weight="700"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">JavaScript</text>
 
 
-<!-- ════════════════════════════════════ -->
-<!--  HORIZONTAL ARROWS (between boxes)  -->
-<!--  at y=338                           -->
-<!-- ════════════════════════════════════ -->
-
-<!-- Box1 → Box2  (x=314 → x=340) -->
-<line x1="315" y1="338" x2="339" y2="338"
-      stroke="#78909C" stroke-width="2.5" marker-end="url(#arrowH)"/>
-
-<!-- Box2 → Box3  (x=561 → x=587) -->
-<line x1="562" y1="338" x2="586" y2="338"
-      stroke="#78909C" stroke-width="2.5" marker-end="url(#arrowH)"/>
-
-<!-- Box3 → Box4  (x=808 → x=834) -->
-<line x1="809" y1="338" x2="833" y2="338"
-      stroke="#78909C" stroke-width="2.5" marker-end="url(#arrowH)"/>
-
-<!-- Box4 → Box5  (x=1055 → x=1081) -->
-<line x1="1056" y1="338" x2="1080" y2="338"
-      stroke="#78909C" stroke-width="2.5" marker-end="url(#arrowH)"/>
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!--  ARROW 1  (green, pointing down)                 -->
+<!--  shaft y=252→295   head tip y=322                -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<rect x="576" y="252" width="48" height="44" rx="4" fill="url(#gArrG)"/>
+<polygon points="546,296 600,326 654,296" fill="url(#gArrG)"/>
+<!-- outline -->
+<rect x="576" y="252" width="48" height="44" rx="4" fill="none"
+      stroke="#0A3A13" stroke-width="1.5" opacity=".4"/>
+<polygon points="546,296 600,326 654,296" fill="none"
+         stroke="#0A3A13" stroke-width="1.5" opacity=".4"/>
 
 
-<!-- ═══════════════════════ -->
-<!--  LEGEND                -->
-<!-- ═══════════════════════ -->
-<rect x="96" y="606" width="1204" height="56" rx="10"
-      fill="#FAFAFA" stroke="#E0E0E0" stroke-width="1.5"/>
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!--  LAYER 2 ·  DATA STORAGE LAYER  (BLUE)                         -->
+<!--  3D-strip y=328→355   main-body y=355→522                      -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
 
-<!-- 1 -->
-<circle cx="130" cy="634" r="11" fill="#2E7D32"/>
-<text x="130" y="639" text-anchor="middle" font-size="11" font-weight="bold"
-      fill="white" font-family="'Segoe UI',Arial,sans-serif">1</text>
-<text x="147" y="639" font-size="13" fill="#333"
-      font-family="'Segoe UI',Arial,sans-serif">Data Source</text>
+<polygon points="28,355 1172,355 1172,522 28,522"
+         fill="#050D44" opacity=".35" transform="translate(4,14)" filter="url(#sh)"/>
+<polygon points="28,518 1172,518 1172,524 28,524" fill="url(#gBbottom)"/>
+<polygon points="28,355 1172,355 1172,522 28,522" fill="url(#gB)"/>
+<polygon points="36,328 1164,328 1172,355 28,355" fill="url(#gBtop)"/>
+<line x1="36" y1="328" x2="1164" y2="328" stroke="#88AAFF" stroke-width="1.8" opacity=".55"/>
 
-<!-- 2 -->
-<circle cx="270" cy="634" r="11" fill="#1565C0"/>
-<text x="270" y="639" text-anchor="middle" font-size="11" font-weight="bold"
-      fill="white" font-family="'Segoe UI',Arial,sans-serif">2</text>
-<text x="287" y="639" font-size="13" fill="#333"
-      font-family="'Segoe UI',Arial,sans-serif">Input</text>
+<!-- blue circuit traces -->
+<g stroke="#6699FF" stroke-width="1.4" opacity=".20" fill="none">
+  <path d="M 55,372 H 115 V 395 H 175"/>  <circle cx="55"  cy="372" r="3.5" fill="#6699FF"/>
+  <circle cx="175" cy="395" r="3.5" fill="#6699FF"/>
+  <path d="M 60,430 H 138 V 448 H 205"/>  <circle cx="60"  cy="430" r="3.5" fill="#6699FF"/>
+  <circle cx="205" cy="448" r="3.5" fill="#6699FF"/>
+  <path d="M 65,478 H 165"/>              <circle cx="65"  cy="478" r="3.5" fill="#6699FF"/>
+  <circle cx="165" cy="478" r="3.5" fill="#6699FF"/>
+  <path d="M 1145,372 H 1085 V 395 H 1025"/> <circle cx="1145" cy="372" r="3.5" fill="#6699FF"/>
+  <circle cx="1025" cy="395" r="3.5" fill="#6699FF"/>
+  <path d="M 1140,430 H 1062 V 448 H 998"/>  <circle cx="998" cy="448" r="3.5" fill="#6699FF"/>
+  <path d="M 1132,478 H 1035"/>
+  <circle cx="1132" cy="478" r="3.5" fill="#6699FF"/> <circle cx="1035" cy="478" r="3.5" fill="#6699FF"/>
+</g>
 
-<!-- 3 -->
-<circle cx="378" cy="634" r="11" fill="#6A1B9A"/>
-<text x="378" y="639" text-anchor="middle" font-size="11" font-weight="bold"
-      fill="white" font-family="'Segoe UI',Arial,sans-serif">3</text>
-<text x="395" y="639" font-size="13" fill="#333"
-      font-family="'Segoe UI',Arial,sans-serif">Processing</text>
+<!-- heading -->
+<text x="600" y="382" text-anchor="middle" font-size="27" font-weight="800"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">Data Storage Layer (ส่วนจัดเก็บข้อมูล)</text>
+<text x="600" y="404" text-anchor="middle" font-size="14.5" fill="#A0C8FF"
+      font-family="'Segoe UI',Arial,sans-serif">Supabase PostgreSQL: ฐานข้อมูลกลาง (Centralized Cloud Database)</text>
+<line x1="155" y1="414" x2="1045" y2="414" stroke="white" stroke-width="1" opacity=".28"/>
 
-<!-- 4 -->
-<circle cx="517" cy="634" r="11" fill="#00695C"/>
-<text x="517" y="639" text-anchor="middle" font-size="11" font-weight="bold"
-      fill="white" font-family="'Segoe UI',Arial,sans-serif">4</text>
-<text x="534" y="639" font-size="13" fill="#333"
-      font-family="'Segoe UI',Arial,sans-serif">Data Storage</text>
+<!-- ── Flow: Email Received → Supabase SDK → PostgreSQL ── -->
+<!-- Box 1: Email/POS Input -->
+<rect x="98" y="426" width="210" height="76" rx="13"
+      fill="white" fill-opacity=".16" stroke="white" stroke-opacity=".32" stroke-width="1.3"/>
+<!-- envelope icon circle bg -->
+<circle cx="157" cy="464" r="30" fill="white" opacity=".92" filter="url(#shSm)"/>
+<!-- envelope body -->
+<rect x="138" y="450" width="38" height="28" rx="3" fill="#1565C0"/>
+<!-- envelope flap -->
+<polygon points="138,450 157,465 176,450" fill="#1E88E5"/>
+<!-- envelope shadow lines -->
+<line x1="140" y1="476" x2="174" y2="476" stroke="white" stroke-width="1.5" opacity=".5"/>
+<!-- text -->
+<text x="210" y="458" text-anchor="middle" font-size="13.5" font-weight="700"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">Email Received</text>
+<text x="210" y="476" text-anchor="middle" font-size="12" fill="#A0C8FF"
+      font-family="'Segoe UI',Arial,sans-serif">(Form Data via Email)</text>
 
-<!-- 5 -->
-<circle cx="677" cy="634" r="11" fill="#C62828"/>
-<text x="677" y="639" text-anchor="middle" font-size="11" font-weight="bold"
-      fill="white" font-family="'Segoe UI',Arial,sans-serif">5</text>
-<text x="694" y="639" font-size="13" fill="#333"
-      font-family="'Segoe UI',Arial,sans-serif">Visualization</text>
+<!-- horizontal arrow 1 -->
+<polygon points="320,458 356,450 356,468" fill="white" opacity=".85"/>
+<line x1="315" y1="459" x2="354" y2="459" stroke="white" stroke-width="3.5" opacity=".85"/>
 
-<!-- arrow symbol in legend -->
-<line x1="834" y1="634" x2="856" y2="634"
-      stroke="#78909C" stroke-width="2.5" marker-end="url(#arrowH)"/>
-<text x="866" y="639" font-size="13" fill="#333"
-      font-family="'Segoe UI',Arial,sans-serif">Data Flow</text>
+<!-- Box 2: Supabase SDK / Power Automate -->
+<rect x="362" y="426" width="248" height="76" rx="13"
+      fill="white" fill-opacity=".16" stroke="white" stroke-opacity=".32" stroke-width="1.3"/>
+<!-- Supabase icon: lightning bolt in circle -->
+<circle cx="428" cy="464" r="30" fill="white" opacity=".92" filter="url(#shSm)"/>
+<!-- lightning bolt shape -->
+<polygon points="432,438 422,462 432,459 422,490 442,466 432,469 442,438" fill="#3ECF8E"/>
+<!-- text -->
+<text x="510" y="454" text-anchor="middle" font-size="13.5" font-weight="700"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">Supabase JS SDK</text>
+<text x="510" y="471" text-anchor="middle" font-size="12" fill="#A0C8FF"
+      font-family="'Segoe UI',Arial,sans-serif">(Process &amp; Transform)</text>
 
-<!-- Supabase Realtime note -->
-<text x="1070" y="628" font-size="11" fill="#888"
-      font-family="'Segoe UI',Arial,sans-serif">Stack: React · Supabase · PostgreSQL · JavaScript</text>
-<text x="1070" y="647" font-size="11" fill="#888"
-      font-family="'Segoe UI',Arial,sans-serif">ร้านนายตะวัน POS · 2026</text>
+<!-- horizontal arrow 2 -->
+<polygon points="622,458 658,450 658,468" fill="white" opacity=".85"/>
+<line x1="617" y1="459" x2="656" y2="459" stroke="white" stroke-width="3.5" opacity=".85"/>
+
+<!-- Box 3: PostgreSQL Database -->
+<rect x="664" y="426" width="248" height="76" rx="13"
+      fill="white" fill-opacity=".16" stroke="white" stroke-opacity=".32" stroke-width="1.3"/>
+<!-- DB cylinder icon -->
+<circle cx="728" cy="464" r="30" fill="white" opacity=".92" filter="url(#shSm)"/>
+<!-- cylinder stack -->
+<ellipse cx="728" cy="450" rx="19" ry="7" fill="#4A90D9"/>
+<rect x="709" y="450" width="38" height="22" fill="#336791"/>
+<ellipse cx="728" cy="472" rx="19" ry="7" fill="#27527A"/>
+<ellipse cx="728" cy="450" rx="19" ry="7" fill="#5BA3E0"/>
+<!-- highlight on cylinder -->
+<ellipse cx="720" cy="448" rx="8" ry="3" fill="white" opacity=".3"/>
+<!-- text -->
+<text x="810" y="454" text-anchor="middle" font-size="13.5" font-weight="700"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">SharePoint List</text>
+<text x="810" y="471" text-anchor="middle" font-size="12" fill="#A0C8FF"
+      font-family="'Segoe UI',Arial,sans-serif">(Centralized Database)</text>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!--  ARROW 2  (blue)                                 -->
+<!--  shaft y=526→568   head tip y=594                -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<rect x="576" y="526" width="48" height="44" rx="4" fill="url(#gArrB)"/>
+<polygon points="546,570 600,598 654,570" fill="url(#gArrB)"/>
+<rect x="576" y="526" width="48" height="44" rx="4" fill="none"
+      stroke="#05113A" stroke-width="1.5" opacity=".4"/>
+<polygon points="546,570 600,598 654,570" fill="none"
+         stroke="#05113A" stroke-width="1.5" opacity=".4"/>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!--  LAYER 3 ·  VISUALIZATION LAYER  (PURPLE)                      -->
+<!--  3D-strip y=600→628   main-body y=628→800                      -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+
+<polygon points="28,628 1172,628 1172,800 28,800"
+         fill="#0A0320" opacity=".35" transform="translate(4,14)" filter="url(#sh)"/>
+<polygon points="28,796 1172,796 1172,802 28,802" fill="url(#gPbottom)"/>
+<polygon points="28,628 1172,628 1172,800 28,800" fill="url(#gP)"/>
+<polygon points="36,602 1164,602 1172,628 28,628" fill="url(#gPtop)"/>
+<line x1="36" y1="602" x2="1164" y2="602" stroke="#CC88FF" stroke-width="1.8" opacity=".55"/>
+
+<!-- purple circuit traces -->
+<g stroke="#CC80FF" stroke-width="1.4" opacity=".20" fill="none">
+  <path d="M 55,645 H 118 V 668 H 178"/>  <circle cx="55"  cy="645" r="3.5" fill="#CC80FF"/>
+  <circle cx="178" cy="668" r="3.5" fill="#CC80FF"/>
+  <path d="M 60,712 H 142 V 730 H 205"/>  <circle cx="60"  cy="712" r="3.5" fill="#CC80FF"/>
+  <circle cx="205" cy="730" r="3.5" fill="#CC80FF"/>
+  <path d="M 66,768 H 172"/>              <circle cx="66"  cy="768" r="3.5" fill="#CC80FF"/>
+  <circle cx="172" cy="768" r="3.5" fill="#CC80FF"/>
+  <path d="M 1145,645 H 1082 V 668 H 1022"/> <circle cx="1145" cy="645" r="3.5" fill="#CC80FF"/>
+  <circle cx="1022" cy="668" r="3.5" fill="#CC80FF"/>
+  <path d="M 1140,712 H 1058 V 730 H 995"/>  <circle cx="995"  cy="730" r="3.5" fill="#CC80FF"/>
+  <path d="M 1134,768 H 1028"/>
+  <circle cx="1134" cy="768" r="3.5" fill="#CC80FF"/>
+</g>
+
+<!-- heading -->
+<text x="600" y="656" text-anchor="middle" font-size="27" font-weight="800"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">Visualization Layer (ส่วนแสดงผล)</text>
+<text x="600" y="678" text-anchor="middle" font-size="14.5" fill="#D4AAFF"
+      font-family="'Segoe UI',Arial,sans-serif">Microsoft Power Apps: แดชบอร์ดแสดงผลแบบเรียลไทม์</text>
+<line x1="155" y1="688" x2="1045" y2="688" stroke="white" stroke-width="1" opacity=".28"/>
+
+<!-- ── 5 Cards ── -->
+<!-- card width=162 gap=27.5  start x = (1200 - 5*162 - 4*27.5)/2 = (1200-810-110)/2 = 140 -->
+<!-- Card 1: cx=221 (x=140→302) -->
+<!-- Card 2: cx=411 (x=330→492) -->
+<!-- Card 3: cx=601 (x=520→682) -->
+<!-- Card 4: cx=791 (x=710→872) -->
+<!-- Card 5: cx=981 (x=900→1062) -->
+
+<!-- Card 1: Power Apps Dashboard -->
+<rect x="135" y="698" width="172" height="90" rx="12"
+      fill="white" fill-opacity=".15" stroke="white" stroke-opacity=".35" stroke-width="1.4"/>
+<rect x="163" y="706" width="88" height="70" rx="8" fill="white" opacity=".90" filter="url(#shSm)"/>
+<!-- Power Apps diamond icon -->
+<polygon points="207,714 228,735 207,755 186,735" fill="#742774"/>
+<polygon points="207,714 228,735 207,735 186,735" fill="#A040A8"/>
+<polygon points="207,714 228,735 207,724" fill="#BE57C6"/>
+<text x="221" y="795" text-anchor="middle" font-size="13" font-weight="600"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">Power Apps</text>
+<text x="221" y="810" text-anchor="middle" font-size="11" fill="#D4AAFF"
+      font-family="'Segoe UI',Arial,sans-serif">Dashboard</text>
+
+<!-- Card 2: Timeline View -->
+<rect x="323" y="698" width="172" height="90" rx="12"
+      fill="white" fill-opacity=".15" stroke="white" stroke-opacity=".35" stroke-width="1.4"/>
+<rect x="351" y="706" width="88" height="70" rx="8" fill="white" opacity=".90" filter="url(#shSm)"/>
+<!-- Timeline / step dots -->
+<circle cx="366" cy="726" r="8" fill="#4A90D2" stroke="#1E5FA0" stroke-width="1.5"/>
+<text x="366" y="730" text-anchor="middle" font-size="9" fill="white" font-weight="bold">1</text>
+<line x1="374" y1="726" x2="387" y2="726" stroke="#888" stroke-width="2.5"/>
+<circle cx="395" cy="726" r="8" fill="#4A90D2" stroke="#1E5FA0" stroke-width="1.5"/>
+<text x="395" y="730" text-anchor="middle" font-size="9" fill="white" font-weight="bold">2</text>
+<line x1="403" y1="726" x2="416" y2="726" stroke="#888" stroke-width="2.5"/>
+<circle cx="424" cy="726" r="8" fill="#4A90D2" stroke="#1E5FA0" stroke-width="1.5"/>
+<text x="424" y="730" text-anchor="middle" font-size="9" fill="white" font-weight="bold">3</text>
+<line x1="432" y1="726" x2="428" y2="726" stroke="#888" stroke-width="2.5"/>
+<!-- below step lines: text rows -->
+<rect x="360" y="740" width="68" height="5" rx="2.5" fill="#AAC8E8" opacity=".7"/>
+<rect x="360" y="750" width="54" height="4" rx="2" fill="#AAC8E8" opacity=".5"/>
+<rect x="360" y="758" width="60" height="4" rx="2" fill="#AAC8E8" opacity=".5"/>
+<text x="409" y="795" text-anchor="middle" font-size="13" font-weight="600"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">Timeline View</text>
+<text x="409" y="810" text-anchor="middle" font-size="11" fill="#D4AAFF"
+      font-family="'Segoe UI',Arial,sans-serif">แสดงลำดับเวลา</text>
+
+<!-- Card 3: Status Overview (donut chart) -->
+<rect x="511" y="698" width="172" height="90" rx="12"
+      fill="white" fill-opacity=".15" stroke="white" stroke-opacity=".35" stroke-width="1.4"/>
+<rect x="539" y="706" width="88" height="70" rx="8" fill="white" opacity=".90" filter="url(#shSm)"/>
+<!-- Donut chart -->
+<circle cx="575" cy="741" r="26" fill="none" stroke="#E0E0E0" stroke-width="10"/>
+<circle cx="575" cy="741" r="26" fill="none" stroke="#4CAF50" stroke-width="10"
+        stroke-dasharray="40 124" stroke-dashoffset="0"/>
+<circle cx="575" cy="741" r="26" fill="none" stroke="#2196F3" stroke-width="10"
+        stroke-dasharray="32 132" stroke-dashoffset="-40"/>
+<circle cx="575" cy="741" r="26" fill="none" stroke="#FF9800" stroke-width="10"
+        stroke-dasharray="22 142" stroke-dashoffset="-72"/>
+<circle cx="575" cy="741" r="26" fill="none" stroke="#F44336" stroke-width="10"
+        stroke-dasharray="30 134" stroke-dashoffset="-94"/>
+<!-- status dots legend (right of donut) -->
+<circle cx="607" cy="728" r="4" fill="#4CAF50"/>
+<circle cx="607" cy="740" r="4" fill="#2196F3"/>
+<circle cx="607" cy="752" r="4" fill="#FF9800"/>
+<circle cx="607" cy="764" r="4" fill="#F44336"/>
+<text x="597" y="795" text-anchor="middle" font-size="13" font-weight="600"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">Status Overview</text>
+<text x="597" y="810" text-anchor="middle" font-size="11" fill="#D4AAFF"
+      font-family="'Segoe UI',Arial,sans-serif">ภาพรวมสถานะ</text>
+
+<!-- Card 4: Gantt Chart -->
+<rect x="699" y="698" width="172" height="90" rx="12"
+      fill="white" fill-opacity=".15" stroke="white" stroke-opacity=".35" stroke-width="1.4"/>
+<rect x="727" y="706" width="88" height="70" rx="8" fill="white" opacity=".90" filter="url(#shSm)"/>
+<!-- Gantt bars -->
+<rect x="735" y="718" width="72" height="5" rx="2" fill="#E0E0E0"/>
+<rect x="735" y="718" width="55" height="5" rx="2" fill="#7E57C2"/>
+<rect x="735" y="728" width="72" height="5" rx="2" fill="#E0E0E0"/>
+<rect x="748" y="728" width="48" height="5" rx="2" fill="#42A5F5"/>
+<rect x="735" y="738" width="72" height="5" rx="2" fill="#E0E0E0"/>
+<rect x="738" y="738" width="35" height="5" rx="2" fill="#66BB6A"/>
+<rect x="735" y="748" width="72" height="5" rx="2" fill="#E0E0E0"/>
+<rect x="752" y="748" width="42" height="5" rx="2" fill="#EF5350"/>
+<rect x="735" y="758" width="72" height="5" rx="2" fill="#E0E0E0"/>
+<rect x="742" y="758" width="58" height="5" rx="2" fill="#FFA726"/>
+<!-- vertical gridline -->
+<line x1="762" y1="716" x2="762" y2="765" stroke="#CCC" stroke-width="1" stroke-dasharray="3,2"/>
+<text x="785" y="795" text-anchor="middle" font-size="13" font-weight="600"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">Gantt Chart</text>
+<text x="785" y="810" text-anchor="middle" font-size="11" fill="#D4AAFF"
+      font-family="'Segoe UI',Arial,sans-serif">แผนและความคืบหน้า</text>
+
+<!-- Card 5: Overdue Alerts (Bell with !) -->
+<rect x="887" y="698" width="172" height="90" rx="12"
+      fill="white" fill-opacity=".15" stroke="white" stroke-opacity=".35" stroke-width="1.4"/>
+<rect x="915" y="706" width="88" height="70" rx="8" fill="white" opacity=".90" filter="url(#shSm)"/>
+<!-- Bell icon -->
+<path d="M 959,714 C 945,714 934,725 934,740 L 934,755 L 928,760 L 990,760 L 984,755 L 984,740 C 984,725 973,714 959,714 Z"
+      fill="#FFC107"/>
+<!-- bell clapper -->
+<circle cx="959" cy="763" r="5" fill="#F57F17"/>
+<!-- Red circle with exclamation -->
+<circle cx="976" cy="720" r="11" fill="#F44336"/>
+<rect x="973.5" y="714" width="5" height="7" rx="2" fill="white"/>
+<circle cx="976" cy="724" r="2.2" fill="white"/>
+<text x="973" y="795" text-anchor="middle" font-size="13" font-weight="600"
+      fill="white" font-family="'Segoe UI',Arial,sans-serif">Overdue Alerts</text>
+<text x="973" y="810" text-anchor="middle" font-size="11" fill="#D4AAFF"
+      font-family="'Segoe UI',Arial,sans-serif">แจ้งเตือนเกินกำหนด</text>
 
 </svg>
 </div>
 
-<div class="btn-row">
-  <button class="btn-svg" onclick="downloadSVG()">⬇ Download SVG</button>
-  <button class="btn-png" onclick="downloadPNG()">⬇ Download PNG</button>
+<div class="btns">
+  <button class="bsvg" onclick="dlSVG()">⬇ Download SVG</button>
+  <button class="bpng" onclick="dlPNG()">⬇ Download PNG</button>
 </div>
 
 <script>
-function downloadSVG() {
-  const svg = document.getElementById('diagram');
-  const s = new XMLSerializer().serializeToString(svg);
-  const blob = new Blob([s], { type: 'image/svg+xml;charset=utf-8' });
-  trigger(URL.createObjectURL(blob), 'data-architecture-pos.svg');
+function dlSVG(){
+  const s=new XMLSerializer().serializeToString(document.getElementById('d'));
+  go(URL.createObjectURL(new Blob([s],{type:'image/svg+xml'})),'data-architecture-pos-layers.svg');
 }
-
-function downloadPNG() {
-  const svg = document.getElementById('diagram');
-  const s = new XMLSerializer().serializeToString(svg);
-  const img = new Image();
-  const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(s)));
-  img.onload = () => {
-    const c = document.createElement('canvas');
-    c.width = 1400; c.height = 726;
-    const ctx = c.getContext('2d');
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, 1400, 726);
-    ctx.drawImage(img, 0, 0);
-    trigger(c.toDataURL('image/png'), 'data-architecture-pos.png');
+function dlPNG(){
+  const s=new XMLSerializer().serializeToString(document.getElementById('d'));
+  const img=new Image();
+  img.onload=()=>{
+    const c=document.createElement('canvas'); c.width=1200; c.height=810;
+    const ctx=c.getContext('2d');
+    ctx.fillStyle='white'; ctx.fillRect(0,0,1200,810);
+    ctx.drawImage(img,0,0);
+    go(c.toDataURL('image/png'),'data-architecture-pos-layers.png');
   };
-  img.src = url;
+  img.src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(s)));
 }
-
-function trigger(href, name) {
-  const a = document.createElement('a');
-  a.href = href; a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+function go(h,n){
+  const a=document.createElement('a'); a.href=h; a.download=n;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 </script>
 </body>
