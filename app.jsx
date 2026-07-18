@@ -41,17 +41,18 @@ function App() {
   const [receipt, setReceipt] = useState(null);
   const [dbReady, setDbReady] = useState(!window.sb);
 
-  // Load from Supabase once authenticated (or immediately if no Supabase configured)
+  // Load from Supabase once authenticated + shop is open.
+  // Bills / restocks are filtered by shopOpenedAt so we only see this session.
   useEffect(() => {
     if (!window.sb || !session) return;
     let cancelled = false;
     (async () => {
       try {
-        const all = await DB.fetchAll();
+        const all = await DB.fetchAll({ since: shop.openedAt || undefined });
         if (cancelled || !all) return;
         if (all.products.length) setProducts(all.products);
-        if (all.bills.length)    setBills(all.bills);
-        if (all.restocks.length) setRestocks(all.restocks);
+        setBills(all.bills);
+        setRestocks(all.restocks);
       } catch (e) {
         console.error('Load from DB failed; using seeds.', e);
       } finally {
@@ -59,7 +60,7 @@ function App() {
       }
     })();
     return () => { cancelled = true; };
-  }, [session]);
+  }, [session, shop.openedAt]);
 
   // Realtime sync — listen for changes from other clients
   useEffect(() => {
@@ -187,63 +188,64 @@ function App() {
     return local.split(/[._-]+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   })();
 
-  // Shop open/closed state (per-device)
-  const [shopOpen, setShopOpen] = useState(() => {
-    try { return localStorage.getItem('shop-open') !== '0'; } catch { return true; }
+  // Shop session: { open, openedAt }
+  // Auto-closes at midnight: if openedAt is from a previous calendar day,
+  // treat the shop as closed so the owner must re-open for the new day.
+  const [shop, setShop] = useState(() => {
+    try {
+      const open = localStorage.getItem('shop-open') === '1';
+      const openedAt = localStorage.getItem('shop-opened-at');
+      const today = new Date().toDateString();
+      const openedDay = openedAt ? new Date(openedAt).toDateString() : null;
+      if (open && openedDay !== today) return { open: false, openedAt: null };
+      return { open, openedAt };
+    } catch { return { open: false, openedAt: null }; }
   });
-  const setShopOpenPersisted = (v) => {
-    setShopOpen(v);
-    try { localStorage.setItem('shop-open', v ? '1' : '0'); } catch {}
+  const persistShop = (next) => {
+    try {
+      localStorage.setItem('shop-open', next.open ? '1' : '0');
+      if (next.openedAt) localStorage.setItem('shop-opened-at', next.openedAt);
+      else localStorage.removeItem('shop-opened-at');
+    } catch {}
   };
+
   const [closingModal, setClosingModal] = useState(null); // { sales, profit, count, top }
 
-  const openCloseShop = async () => {
-    if (!shopOpen) {
-      setShopOpenPersisted(true);
-      pushToast({ kind: 'ok', text: 'เปิดร้านแล้ว' });
-      return;
-    }
-    // Closing → compute today's summary
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    let billsToday = [];
-    let itemRows = [];
-    if (window.sb) {
-      try {
-        const r = await window.sb.from('bills')
-          .select('id, total, profit')
-          .gte('occurred_at', today.toISOString());
-        if (!r.error) billsToday = r.data || [];
-        const ids = billsToday.map((b) => b.id);
-        if (ids.length) {
-          const i = await window.sb.from('bill_items')
-            .select('product_id, qty')
-            .in('bill_id', ids);
-          if (!i.error) itemRows = i.data || [];
-        }
-      } catch (e) { /* fall through */ }
-    }
-    const totals = billsToday.reduce(
-      (a, b) => ({ sales: a.sales + Number(b.total), profit: a.profit + Number(b.profit) }),
-      { sales: 0, profit: 0 },
-    );
-    // Top products today
+  const openShop = useCallback(() => {
+    const next = { open: true, openedAt: new Date().toISOString() };
+    setShop(next);
+    persistShop(next);
+    // Reset session lists — fresh start for the new day
+    setBills([]);
+    setRestocks([]);
+    setCart([]);
+    pushToast({ kind: 'ok', text: 'เปิดร้านเริ่มขายวันใหม่' });
+  }, [pushToast]);
+
+  const promptCloseShop = useCallback(() => {
+    // Summary comes straight from local state — bills are already filtered
+    // by shopOpenedAt, so these are just "this session's" totals.
+    const sales = bills.reduce((s, b) => s + b.total, 0);
+    const profit = bills.reduce((s, b) => s + b.profit, 0);
+    const count = bills.length;
     const counts = {};
-    for (const row of itemRows) {
-      counts[row.product_id] = (counts[row.product_id] || 0) + Number(row.qty);
-    }
-    const top = Object.entries(counts)
-      .sort((a, b) => b[1] - a[1]).slice(0, 3)
-      .map(([id, qty]) => ({
-        name: products.find((p) => p.id === id)?.name || id,
-        qty,
-      }));
-    setClosingModal({
-      sales: totals.sales,
-      profit: totals.profit,
-      count: billsToday.length,
-      top,
+    bills.forEach((b) => {
+      (b.lines || []).forEach((l) => {
+        counts[l.id] = counts[l.id] || { name: l.name, qty: 0 };
+        counts[l.id].qty += l.qty;
+      });
     });
-  };
+    const top = Object.values(counts).sort((a, b) => b.qty - a.qty).slice(0, 3);
+    setClosingModal({ sales, profit, count, top });
+  }, [bills]);
+
+  const confirmCloseShop = useCallback(() => {
+    const next = { open: false, openedAt: null };
+    setShop(next);
+    persistShop(next);
+    setClosingModal(null);
+    pushToast({ kind: 'ok', text: 'ปิดร้านแล้ว — สรุปวันนี้ถูกบันทึก' });
+  }, [pushToast]);
 
   // Today's date string
   const todayStr = new Date().toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
@@ -258,6 +260,9 @@ function App() {
   }
   if (window.sb && !session) {
     return <LoginScreen onSession={setSession}/>;
+  }
+  if (!shop.open) {
+    return <ShopGate userName={userName} onOpen={openShop}/>;
   }
 
   const titles = {
@@ -339,17 +344,17 @@ function App() {
             <button
               type="button"
               className="pill"
-              onClick={openCloseShop}
+              onClick={promptCloseShop}
               style={{
                 cursor: 'pointer',
                 border: 'none',
-                background: shopOpen ? 'var(--ok-soft, #DCEFE3)' : '#F1F3F5',
-                color: shopOpen ? 'var(--ok, #13754A)' : 'var(--ink-3, #6B7280)',
+                background: 'var(--ok-soft, #DCEFE3)',
+                color: 'var(--ok, #13754A)',
                 fontFamily: 'inherit',
               }}
-              title={shopOpen ? 'กดเพื่อปิดร้าน' : 'กดเพื่อเปิดร้าน'}>
-              <span className="dot" style={{ background: shopOpen ? 'var(--ok, #13754A)' : '#9CA3AF' }}></span>
-              {shopOpen ? 'ร้านเปิด' : 'ร้านปิด'}
+              title="กดเพื่อปิดร้าน">
+              <span className="dot" style={{ background: 'var(--ok, #13754A)' }}></span>
+              ร้านเปิด
             </button>
             <span className="pill"><span className="dot"></span>เชื่อมต่ออยู่</span>
             <span className="pill">
@@ -391,9 +396,6 @@ function App() {
           <ForecastScreen products={products} pushToast={pushToast}
             gotoRestock={gotoRestock}/>
         )}
-        {route === 'settings' && (
-          <SettingsScreen pushToast={pushToast} bills={bills}/>
-        )}
       </div>
 
       {receipt && <ReceiptModal bill={receipt} onClose={() => setReceipt(null)}/>}
@@ -403,11 +405,7 @@ function App() {
           summary={closingModal}
           lowCount={lowCount}
           onCancel={() => setClosingModal(null)}
-          onConfirm={() => {
-            setShopOpenPersisted(false);
-            setClosingModal(null);
-            pushToast({ kind: 'ok', text: 'ปิดร้านแล้ว' });
-          }}/>
+          onConfirm={confirmCloseShop}/>
       )}
 
       <div className="toast-wrap">
@@ -497,6 +495,70 @@ function NavItem({ icon, label, active, onClick, badge }) {
         }}>{badge}</span>
       )}
     </button>
+  );
+}
+
+function ShopGate({ userName, onOpen }) {
+  const nowStr = new Date().toLocaleDateString('th-TH', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  });
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'grid',
+      placeItems: 'center',
+      background: 'var(--bg, #F2F4F8)',
+      padding: 24,
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: 420,
+        background: '#fff',
+        borderRadius: 16,
+        padding: 32,
+        boxShadow: '0 4px 24px rgba(0,0,0,.08)',
+        textAlign: 'center',
+      }}>
+        <img src={STORE.logo} alt="" style={{
+          width: 72, height: 72, borderRadius: 14,
+          margin: '0 auto 16px', display: 'block',
+        }}/>
+        <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{STORE.name}</div>
+        <div style={{ fontSize: 13, color: 'var(--ink-3, #6B7280)', marginBottom: 24 }}>
+          {nowStr}
+        </div>
+
+        <div style={{
+          padding: '16px',
+          background: 'var(--bg, #F2F4F8)',
+          borderRadius: 10,
+          marginBottom: 24,
+        }}>
+          <div style={{ fontSize: 14, color: 'var(--ink-2, #374151)', marginBottom: 4 }}>
+            ยินดีต้อนรับ <strong>{userName}</strong>
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--ink-3, #6B7280)' }}>
+            ร้านยังไม่ได้เปิด — กดปุ่มด้านล่างเพื่อเริ่มวันใหม่
+          </div>
+        </div>
+
+        <button onClick={onOpen} style={{
+          width: '100%', padding: '14px 12px',
+          background: 'var(--brand, #1E55B8)', color: '#fff',
+          border: 'none', borderRadius: 10,
+          fontSize: 16, fontWeight: 600, cursor: 'pointer',
+          fontFamily: 'inherit',
+        }}>
+          เปิดร้าน
+        </button>
+
+        <div style={{
+          marginTop: 16, fontSize: 12, color: 'var(--ink-3, #6B7280)',
+        }}>
+          ยอดขาย/บิลของวันนี้จะเริ่มนับใหม่หลังกดเปิดร้าน
+        </div>
+      </div>
+    </div>
   );
 }
 

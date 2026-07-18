@@ -2,13 +2,10 @@
 // Egg demand forecast moved to its own tab (forecast.jsx).
 
 function DashboardScreen({ products, bills, gotoRestock, gotoForecast }) {
-  // Today's running totals
-  const newSales = bills.reduce((s, b) => s + (b.isNew ? b.total : 0), 0);
-  const newProfit = bills.reduce((s, b) => s + (b.isNew ? b.profit : 0), 0);
-  const newBills = bills.filter((b) => b.isNew).length;
-  const sales = TODAY_BASELINE.sales + newSales;
-  const profit = TODAY_BASELINE.profit + newProfit;
-  const billCount = TODAY_BASELINE.bills + newBills;
+  // Current shop-session totals (bills are already filtered by shopOpenedAt)
+  const sales = bills.reduce((s, b) => s + b.total, 0);
+  const profit = bills.reduce((s, b) => s + b.profit, 0);
+  const billCount = bills.length;
   const avg = billCount ? Math.round(sales / billCount) : 0;
   const marginPct = sales > 0 ? (profit / sales) * 100 : 0;
 
@@ -26,7 +23,7 @@ function DashboardScreen({ products, bills, gotoRestock, gotoForecast }) {
   const weekAvg = DAILY_SALES_7D.reduce((s, n) => s + n, 0) / 7;
   const vsAvg = weekAvg > 0 ? ((sales - weekAvg) / weekAvg) * 100 : 0;
 
-  // Top sellers — derived
+  // Top sellers — derived from current shop-session bills
   const productSales = React.useMemo(() => {
     const map = {};
     bills.forEach((b) => {
@@ -36,16 +33,7 @@ function DashboardScreen({ products, bills, gotoRestock, gotoForecast }) {
         map[l.id] = e;
       });
     });
-    const seed = [
-      { name: 'มาม่า ต้มยำกุ้ง', qty: 28, total: 196 },
-      { name: 'ไข่ไก่ เบอร์ 2', qty: 36, total: 198 },
-      { name: 'น้ำดื่ม สิงห์ 600ml', qty: 18, total: 144 },
-      { name: 'ข้าวหอมมะลิ 1kg', qty: 6, total: 348 },
-      { name: 'อาหารหมา Pedigree 1.3kg', qty: 2, total: 330 },
-    ];
-    const arr = Object.values(map);
-    if (arr.length < 3) return seed;
-    return arr.sort((a, b) => b.total - a.total).slice(0, 5);
+    return Object.values(map).sort((a, b) => b.total - a.total).slice(0, 5);
   }, [bills]);
 
   const lowStock = products
